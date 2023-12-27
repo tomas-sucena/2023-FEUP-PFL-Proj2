@@ -23,3 +23,9 @@ pop (x:xs) = xs
 top :: Stack -> Value
 top [] = error "Run-time error"
 top (x:xs) = x
+
+-- Prints the values on the stack.
+stack2Str :: Stack -> String
+stack2Str [] = ""
+stack2Str (x:[]) = show x
+stack2Str (x:xs) = show x ++ "," ++ (stack2Str xs)
