@@ -1,3 +1,4 @@
+module Stack where
 
 data Value =
   I Integer | Tt | Ff
