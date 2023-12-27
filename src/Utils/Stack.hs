@@ -9,17 +9,21 @@ push el [] = el:[]
 push el s = el:s
 
 -- Pops the value on top of the stack.
-pop :: Stack -> Stack
-pop [] = error "Run-time error"
-pop (x:xs) = xs
+pop :: Stack -> Maybe Stack
+pop [] = Nothing
+pop (x:xs) = Just xs
 
 -- Returns the value on top of the stack.
-top :: Stack -> Value
-top [] = error "Run-time error"
-top (x:xs) = x
+top :: Stack -> Maybe Value
+top [] = Nothing
+top (x:xs) = Just x
 
 -- Prints the values on the stack.
 stack2Str :: Stack -> String
 stack2Str [] = ""
 stack2Str (x:[]) = show x
 stack2Str (x:xs) = show x ++ "," ++ (stack2Str xs)
+
+-- Creates a new empty stack.
+createEmptyStack :: Stack
+createEmptyStack = []
