@@ -13,14 +13,10 @@ push el [] = el:[]
 push el stack = el:stack
 
 -- Pops the value on top of the stack.
-pop :: Stack -> Maybe Stack
-pop [] = Nothing
-pop (x:xs) = Just xs
-
--- Returns the value on top of the stack.
-top :: Stack -> Maybe Value
-top [] = Nothing
-top (x:xs) = Just x
+-- Returns the value that was popped and the updated stack.
+pop :: Stack -> (Maybe Value, Stack)
+pop [] = (Nothing, [])
+pop (x:xs) = (Just x, xs)
 
 -- Prints the values on the stack.
 stack2Str :: Stack -> String
