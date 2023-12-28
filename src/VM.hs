@@ -27,7 +27,7 @@ run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([], stack, state) = ([], stack, state)
 
 -- Dummy instruction
-run ( (Noop):xs , stack, state) -> (xs, stack, state)
+run ( (Noop):xs, stack, state) = run (xs, stack, state)
 
  -- Push an integer to the stack.
 run ((Push i):xs, stack, state) =
@@ -72,10 +72,21 @@ run ( Neg:xs, stack, state ) =
 -- Fetches the current value of a variable and pushes it to the top of the stack.
 run ( (Fetch s):xs, stack, state ) =
   case State.find s state of
-    Just value -> ( xs, Stack.push value stack, state )
+    Just value -> run ( xs, Stack.push value stack, state )
     Nothing -> error "Run-time error"
 
 -- Fetches the current value of a variable and pushes it to the top of the stack.
 run ( (Store s):xs, value:stack, state ) =
-  ( xs, stack, State.push s value state )
+  run ( xs, stack, State.push s value state )
 run ( (Store s):_, [], _ ) = error "Run-time error"
+
+-- A conditional branch.
+run ( (Branch c1 c2):xs, (B True):stack, state ) =
+  run ( c1 ++ xs, stack, state )
+run ( (Branch c1 c2):xs, (B False):stack, state ) =
+  run ( c2 ++ xs, stack, state )
+run ( (Branch _ _):_, _, _ ) = error "Run-time error"
+
+-- A loop.
+run ( (Loop c1 c2):xs, stack, state ) =
+  run ( c1 ++ [ Branch (c2 ++ [Loop c1 c2]) [Noop] ] ++ xs, stack, state )
