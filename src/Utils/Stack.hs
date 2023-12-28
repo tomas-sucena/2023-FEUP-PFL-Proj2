@@ -3,10 +3,14 @@ import Utils.Value
 
 type Stack = [Value]
 
+-- Creates a new empty stack.
+createEmptyStack :: Stack
+createEmptyStack = []
+
 -- Pushes a value onto the stack.
 push :: Value -> Stack -> Stack
 push el [] = el:[]
-push el s = el:s
+push el stack = el:stack
 
 -- Pops the value on top of the stack.
 pop :: Stack -> Maybe Stack
@@ -23,7 +27,3 @@ stack2Str :: Stack -> String
 stack2Str [] = ""
 stack2Str (x:[]) = show x
 stack2Str (x:xs) = show x ++ "," ++ (stack2Str xs)
-
--- Creates a new empty stack.
-createEmptyStack :: Stack
-createEmptyStack = []
