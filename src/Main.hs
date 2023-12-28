@@ -2,22 +2,6 @@
 -- Updated on 15/12/2023
 
 -- Part 1
-
--- createEmptyStack :: Stack
-createEmptyStack = undefined -- TODO, Uncomment the function signature after defining Stack
-
--- stack2Str :: Stack -> String
-stack2Str = undefined -- TODO, Uncomment all the other function type declarations as you implement them
-
--- createEmptyState :: State
-createEmptyState = undefined -- TODO, Uncomment the function signature after defining State
-
--- state2Str :: State -> String
-state2Str = undefined -- TODO
-
--- run :: (Code, Stack, State) -> (Code, Stack, State)
-run = undefined -- TODO
-
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
 testAssembler code = (stack2Str stack, state2Str state)
