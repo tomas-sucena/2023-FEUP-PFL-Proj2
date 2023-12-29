@@ -4,6 +4,12 @@ import Data.Char (digitToInt, isAlpha, isAlphaNum, isDigit, isLower)
 import Utils.Token ( Token(..) )
 
 -- Lexes the first word that appears in the string.
+lexNumber :: String -> (Token, String)
+lexNumber s = (IntTok (read number :: Integer), s')
+  where
+    (number, s') = break (not . isDigit) s
+
+-- Lexes the first word that appears in the string.
 lexWord :: String -> (Token, String)
 lexWord s = (token, s')
   where
@@ -42,5 +48,11 @@ lexer ('*':s) = TimesTok:(lexer s)
 lexer ('=':s) = EqTok:(lexer s)
 
 lexer s@(c:_)
+  | isDigit c = token : lexer s'
+  where (token, s') = lexNumber s
+
+lexer s@(c:_)
   | isAlpha c && isLower c = token : lexer s'
   where (token, s') = lexWord s
+
+lexer (c:_) = error ("Unexpected character: '" ++ show c ++ "'")
