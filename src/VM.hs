@@ -20,7 +20,7 @@ applyUnaryOp op ( x:stack ) = (op x):stack
 applyUnaryOp _ _ = error "Run-time error"
 
 applyBinaryOp :: (Value -> Value -> Value) -> Stack -> Stack
-applyBinaryOp op ( x:y:stack ) = (op x y):stack
+applyBinaryOp op ( lhs:rhs:stack ) = (op lhs rhs):stack
 applyBinaryOp _ _ = error "Run-time error"
 
 run :: (Code, Stack, State) -> (Code, Stack, State)

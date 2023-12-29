@@ -8,28 +8,28 @@ instance Show Value where
   show (B b) = show b
 
 (+) :: Value -> Value -> Value
-(+) (I x) (I y) = (I (x Prelude.+ y) )
+(+) (I lhs) (I rhs) = (I (lhs Prelude.+ rhs) )
 (+) _ _ = error "Run-time error"
 
 (*) :: Value -> Value -> Value
-(*) (I x) (I y) = (I (x Prelude.* y) )
+(*) (I lhs) (I rhs) = (I (lhs Prelude.* rhs) )
 (*) _ _ = error "Run-time error"
 
 (-) :: Value -> Value -> Value
-(-) (I x) (I y) = (I (x Prelude.- y) )
+(-) (I lhs) (I rhs) = (I (lhs Prelude.- rhs) )
 (-) _ _ = error "Run-time error"
 
 (==) :: Value -> Value -> Value
-(==) (I x) (I y) = (B (x Prelude.== y) )
-(==) (B x) (B y) = (B (x Prelude.== y) )
+(==) (I lhs) (I rhs) = (B (lhs Prelude.== rhs) )
+(==) (B lhs) (B rhs) = (B (lhs Prelude.== rhs) )
 (==) _ _ = error "Run-time error"
 
 (<=) :: Value -> Value -> Value
-(<=) (I x) (I y) = (B (x Prelude.<= y) )
+(<=) (I lhs) (I rhs) = (B (lhs Prelude.<= rhs) )
 (<=) _ _ = error "Run-time error"
 
 (&&) :: Value -> Value -> Value
-(&&) (B x) (B y) = (B (x Prelude.&& y) )
+(&&) (B lhs) (B rhs) = (B (lhs Prelude.&& rhs) )
 (&&) _ _ = error "Run-time error"
 
 not :: Value -> Value

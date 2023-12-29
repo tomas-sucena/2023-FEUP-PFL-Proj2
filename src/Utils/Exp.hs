@@ -1,11 +1,11 @@
-module Exp where
+module Utils.Exp where
 
 -- arithmetic expressions
 data Aexp =
   Int Integer         -- constants
   | Add Aexp Aexp     -- addition
-  | Minus Aexp Aexp   -- subtraction
   | Mult Aexp Aexp    -- multiplication
+  | Sub Aexp Aexp   -- subtraction
 
 -- boolean expressions
 data Bexp =
@@ -20,3 +20,4 @@ data Stm =
   Assign String Aexp -- integer assignment
   | If Bexp Stm -- if
   | While Bexp Stm -- while
+  | Until Bexp Stm -- until
