@@ -18,8 +18,9 @@ data Token =
   | Plus -- '+'
   | Minus -- '-'
   | Times -- '*'
-  | Eq -- '='
-  | EqEq -- '=='
+  | IEqu -- '='
+  | BEqu -- '=='
+  | Le -- '<='
 
   -- keywords
   | If -- 'if'

@@ -8,7 +8,7 @@ import qualified Utils.Inst as Inst ( Inst(..) )
 
 -- Compiles an arithmetic expression
 compA :: Aexp -> Code
-compA (Stm.Int i) = [Inst.Push i]
+compA (Stm.I i) = [Inst.Push i]
 compA (Stm.Var s) = [Inst.Fetch s]
 compA (Stm.Add lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Add]
 compA (Stm.Mult lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Mult]
@@ -16,14 +16,15 @@ compA (Stm.Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Sub]
 
 -- Compiles a boolean expression
 compB :: Bexp -> Code
-compB (Stm.Bool True) = [Inst.Tru]
-compB (Stm.Bool False) = [Inst.Fals]
+compB (Stm.B True) = [Inst.Tru]
+compB (Stm.B False) = [Inst.Fals]
 compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
 compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
-compB (Stm.BEq lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
-compB (Stm.IEq lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
+compB (Stm.BEqu lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
+compB (Stm.IEqu lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
+compB (Stm.Le lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le]
 
--- Compiles a list of statements.
+-- Compiles a program i.e. a list of statements.
 comp :: Program -> Code
 comp [] = []
 comp ( (Stm.Assign var exp):xs ) = (compA exp) ++ [Inst.Store var] ++ (comp xs)
