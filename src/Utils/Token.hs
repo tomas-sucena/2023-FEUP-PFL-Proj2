@@ -3,6 +3,7 @@ module Utils.Token where
 data Token =
   -- values
   Int Integer
+  | Bool Bool
   | Var String
 
   -- symbols

@@ -21,6 +21,8 @@ lexWord s = (token, s')
       "while" -> Token.While
       "until" -> Token.Until
       "do" -> Token.Do
+      "True" -> Token.Bool True
+      "False" -> Token.Bool False
       _ -> Token.Var word
 
 -- Converts the source code into a list of tokens.
@@ -52,7 +54,7 @@ lexer s@(c:_)
   where (token, s') = lexNumber s
 
 lexer s@(c:_)
-  | isAlpha c && isLower c = token : lexer s'
+  | isAlpha c = token : lexer s'
   where (token, s') = lexWord s
 
 lexer (c:_) = error ("Unexpected character: '" ++ show c ++ "'")
