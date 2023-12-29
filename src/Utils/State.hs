@@ -1,6 +1,6 @@
 module Utils.State where
 
-import qualified Data.Map as Map -- tree maps
+import qualified Data.Map as Map (Map, empty, insert, lookup, mapAccumWithKey)
 import Utils.Value ( Value(..) )
 
 type State = Map.Map String Value
