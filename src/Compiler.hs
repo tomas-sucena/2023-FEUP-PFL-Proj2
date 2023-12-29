@@ -1,21 +1,31 @@
 module Compiler where
 
-import Utils.Exp ( Aexp(..), Bexp(..), Stm(..) )
-import Utils.Inst ( Inst(..), Code )
+import Utils.Stm ( Aexp, Bexp, Program )
+import qualified Utils.Stm as Stm ( Aexp(..), Bexp(..), Stm(..) )
+
+import Utils.Inst ( Code )
+import qualified Utils.Inst as Inst ( Inst(..) )
 
 -- Compiles an arithmetic expression
 compA :: Aexp -> Code
-compA (Int i) = [Push i]
-compA (Var s) = [Fetch s]
-compA (Add lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Add]
-compA (Mult lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Mult]
-compA (Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Sub]
+compA (Stm.Int i) = [Inst.Push i]
+compA (Stm.Var s) = [Inst.Fetch s]
+compA (Stm.Add lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Add]
+compA (Stm.Mult lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Mult]
+compA (Stm.Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Sub]
 
 -- Compiles a boolean expression
 compB :: Bexp -> Code
-compB (Bool True) = [Tru]
-compB (Bool False) = [Fals]
-compB (Not exp) = (compB exp) ++ [Neg]
-compB (And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [And]
-compB (BEq lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Equ]
-compB (IEq lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Equ]
+compB (Stm.Bool True) = [Inst.Tru]
+compB (Stm.Bool False) = [Inst.Fals]
+compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
+compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
+compB (Stm.BEq lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
+compB (Stm.IEq lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
+
+-- Compiles a list of statements.
+comp :: Program -> Code
+comp [] = []
+comp ( (Stm.Assign var exp):xs ) = (compA exp) ++ [Inst.Store var] ++ (comp xs)
+comp ( (Stm.If cond code):xs ) = [Inst.Branch (compB cond) (comp [code]) ] ++ (comp xs)
+comp ( (Stm.While cond code):xs ) = [Inst.Loop (compB cond) (comp [code]) ] ++ (comp xs)

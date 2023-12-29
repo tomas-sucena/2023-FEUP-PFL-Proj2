@@ -1,4 +1,4 @@
-module Utils.Exp where
+module Utils.Stm where
 
 -- arithmetic expressions
 data Aexp =
@@ -7,6 +7,7 @@ data Aexp =
   | Add Aexp Aexp     -- addition
   | Mult Aexp Aexp    -- multiplication
   | Sub Aexp Aexp     -- subtraction
+  deriving Show
 
 -- boolean expressions
 data Bexp =
@@ -15,10 +16,13 @@ data Bexp =
   | And Bexp Bexp     -- logical AND
   | BEq Bexp Bexp     -- boolean equality
   | IEq Aexp Aexp     -- integer equality
+  deriving Show
 
 -- statements
 data Stm =
   Assign String Aexp -- integer assignment
   | If Bexp Stm -- if
   | While Bexp Stm -- while
-  | Until Bexp Stm -- until
+  deriving Show
+
+type Program = [Stm]
