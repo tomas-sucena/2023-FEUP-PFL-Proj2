@@ -3,17 +3,18 @@ module Utils.Exp where
 -- arithmetic expressions
 data Aexp =
   Int Integer         -- constants
+  | Var String        -- variables
   | Add Aexp Aexp     -- addition
   | Mult Aexp Aexp    -- multiplication
-  | Sub Aexp Aexp   -- subtraction
+  | Sub Aexp Aexp     -- subtraction
 
 -- boolean expressions
 data Bexp =
   Bool Bool           -- constants
   | Not Bexp          -- negation
   | And Bexp Bexp     -- logical AND
-  | Eq Bexp Bexp      -- boolean equality
-  | IntEq Aexp Aexp   -- integer equality
+  | BEq Bexp Bexp     -- boolean equality
+  | IEq Aexp Aexp     -- integer equality
 
 -- statements
 data Stm =
