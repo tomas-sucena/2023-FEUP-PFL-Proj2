@@ -5,6 +5,11 @@ data Token =
   IntTok Integer
   | VarTok String
 
+  -- symbols
+  | SemicolonTok -- ';'
+  | LParenTok -- '('
+  | RParenTok -- ')'
+
   -- operators
   | AssignTok -- ':='
   | NotTok -- '~'
@@ -14,15 +19,12 @@ data Token =
   | EqTok -- '='
   | EqEqTok -- '=='
 
-  -- symbols
-  | SemicolonTok -- ';'
-  | LParenTok -- '('
-  | RParenTok -- ')'
-
   -- keywords
   | IfTok -- 'if'
+  | ThenTok -- 'then'
   | ElseTok -- 'else'
   | WhileTok -- 'while'
   | UntilTok -- 'until'
   | DoTok -- 'do'
-  | ThenTok -- 'then'
+
+  deriving Show

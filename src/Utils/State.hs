@@ -23,5 +23,6 @@ state2Str :: State -> String
 state2Str state
   | acc == "" = ""
   | otherwise = init acc -- return everything except the last comma
-  where (acc, _) = Map.mapAccumWithKey printVar "" state
-        printVar acc key value = (acc ++ key ++ "=" ++ show value ++ ",", Nothing)
+  where
+    (acc, _) = Map.mapAccumWithKey printVar "" state
+    printVar acc key value = (acc ++ key ++ "=" ++ show value ++ ",", Nothing)
