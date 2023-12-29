@@ -15,6 +15,7 @@ lexWord s = (token, s')
   where
     (word, s') = break (not . isAlphaNum) s
     token = case word of
+      "not" -> Token.Not
       "if" -> Token.If
       "then" -> Token.Then
       "else" -> Token.Else
@@ -57,4 +58,4 @@ lexer s@(c:_)
   | isAlpha c = token : lexer s'
   where (token, s') = lexWord s
 
-lexer (c:_) = error ("Unexpected character: '" ++ show c ++ "'")
+lexer (c:_) = error ("Unexpected character: " ++ show c)

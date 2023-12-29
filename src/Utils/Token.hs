@@ -1,10 +1,11 @@
 module Utils.Token where
 
 data Token =
+  Var String -- variables
+
   -- values
-  Int Integer
+  | Int Integer
   | Bool Bool
-  | Var String
 
   -- symbols
   | Semicolon -- ';'
@@ -13,7 +14,7 @@ data Token =
 
   -- operators
   | Assign -- ':='
-  | Not -- '~'
+  | Not -- 'not'
   | Plus -- '+'
   | Minus -- '-'
   | Times -- '*'
