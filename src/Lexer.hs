@@ -1,11 +1,11 @@
 module Lexer where
 
-import Data.Char (digitToInt, isAlpha, isAlphaNum, isDigit, isLower)
-import Utils.Token ( Token(..) )
+import Data.Char (isAlpha, isAlphaNum, isDigit, isLower)
+import Utils.Token as Token ( Token(..) )
 
 -- Lexes the first word that appears in the string.
 lexNumber :: String -> (Token, String)
-lexNumber s = (IntTok (read number :: Integer), s')
+lexNumber s = (Token.Int (read number :: Integer), s')
   where
     (number, s') = break (not . isDigit) s
 
@@ -15,13 +15,13 @@ lexWord s = (token, s')
   where
     (word, s') = break (not . isAlphaNum) s
     token = case word of
-      "if" -> IfTok
-      "then" -> ThenTok
-      "else" -> ElseTok
-      "while" -> WhileTok
-      "until" -> UntilTok
-      "do" -> DoTok
-      _ -> VarTok word
+      "if" -> Token.If
+      "then" -> Token.Then
+      "else" -> Token.Else
+      "while" -> Token.While
+      "until" -> Token.Until
+      "do" -> Token.Do
+      _ -> Token.Var word
 
 -- Converts the source code into a list of tokens.
 lexer :: String -> [Token]
@@ -34,18 +34,18 @@ lexer ('\t':s) = lexer s
 lexer ('\r':s) = lexer s
 
 -- symbols
-lexer (';':s) = SemicolonTok:(lexer s)
-lexer ('(':s) = LParenTok:(lexer s)
-lexer (')':s) = RParenTok:(lexer s)
+lexer (';':s) = Token.Semicolon:(lexer s)
+lexer ('(':s) = Token.LParen:(lexer s)
+lexer (')':s) = Token.RParen:(lexer s)
 
 -- operators
-lexer (':':'=':s) = AssignTok:(lexer s)
-lexer ('=':'=':s) = EqEqTok:(lexer s)
-lexer ('~':s) = NotTok:(lexer s)
-lexer ('+':s) = PlusTok:(lexer s)
-lexer ('-':s) = MinusTok:(lexer s)
-lexer ('*':s) = TimesTok:(lexer s)
-lexer ('=':s) = EqTok:(lexer s)
+lexer (':':'=':s) = Token.Assign:(lexer s)
+lexer ('=':'=':s) = Token.EqEq:(lexer s)
+lexer ('~':s) = Token.Not:(lexer s)
+lexer ('+':s) = Token.Plus:(lexer s)
+lexer ('-':s) = Token.Minus:(lexer s)
+lexer ('*':s) = Token.Times:(lexer s)
+lexer ('=':s) = Token.Eq:(lexer s)
 
 lexer s@(c:_)
   | isDigit c = token : lexer s'

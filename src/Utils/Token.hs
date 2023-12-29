@@ -2,29 +2,29 @@ module Utils.Token where
 
 data Token =
   -- values
-  IntTok Integer
-  | VarTok String
+  Int Integer
+  | Var String
 
   -- symbols
-  | SemicolonTok -- ';'
-  | LParenTok -- '('
-  | RParenTok -- ')'
+  | Semicolon -- ';'
+  | LParen -- '('
+  | RParen -- ')'
 
   -- operators
-  | AssignTok -- ':='
-  | NotTok -- '~'
-  | PlusTok -- '+'
-  | MinusTok -- '-'
-  | TimesTok -- '*'
-  | EqTok -- '='
-  | EqEqTok -- '=='
+  | Assign -- ':='
+  | Not -- '~'
+  | Plus -- '+'
+  | Minus -- '-'
+  | Times -- '*'
+  | Eq -- '='
+  | EqEq -- '=='
 
   -- keywords
-  | IfTok -- 'if'
-  | ThenTok -- 'then'
-  | ElseTok -- 'else'
-  | WhileTok -- 'while'
-  | UntilTok -- 'until'
-  | DoTok -- 'do'
+  | If -- 'if'
+  | Then -- 'then'
+  | Else -- 'else'
+  | While -- 'while'
+  | Until -- 'until'
+  | Do -- 'do'
 
   deriving Show

@@ -30,7 +30,7 @@ run ([], stack, state) = ([], stack, state)
 run ( (Noop):xs, stack, state) = run (xs, stack, state)
 
  -- Push an integer to the stack.
-run ((Push i):xs, stack, state) =
+run ( (Push i):xs, stack, state) =
   run (xs, Stack.push (I i) stack, state)
 
 -- Add two integers.
