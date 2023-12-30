@@ -2,7 +2,7 @@ module Utils.Stm where
 
 -- arithmetic expressions
 data Aexp =
-  I Integer         -- constants
+  I Integer           -- constant
   | Var String        -- variables
   | Add Aexp Aexp     -- addition
   | Mult Aexp Aexp    -- multiplication

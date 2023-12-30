@@ -14,17 +14,26 @@ parsePrimary ( (Token.I i):tokens ) = (Just (Stm.I i), tokens)
 parsePrimary ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
 parsePrimary tokens = (Nothing, tokens)
 
+-- Parse unary expressions.
+parseUnary :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+parseUnary (_, Token.Sub:tokens) =
+  case parsePrimary tokens of
+    (Just exp, tokens') -> parseUnary (Just (Stm.Sub (Stm.I 0) exp), tokens')
+    _ -> error "Parse error: expected an arithmetic expression after '-'"
+parseUnary (Nothing, tokens) = parsePrimary tokens
+parseUnary (exp, tokens) = (exp, tokens)
+
 -- Parse factors.
 parseFactor :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 
 -- multiplication
 parseFactor (Just lhs, Token.Mult:tokens) =
-  case parsePrimary tokens of
+  case parseUnary (Nothing, tokens) of
     (Just rhs, tokens') -> parseFactor (Just (Stm.Mult lhs rhs), tokens')
     _ -> error "Parse error: expected an arithmetic expression after '*'"
 
 parseFactor (Nothing, tokens) =
-  case parsePrimary tokens of
+  case parseUnary (Nothing, tokens) of
     (Nothing, tokens') -> (Nothing, tokens')
     (exp, tokens') -> parseFactor (exp, tokens')
 parseFactor (exp, tokens) = (exp, tokens)
