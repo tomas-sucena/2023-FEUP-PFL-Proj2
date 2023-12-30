@@ -22,10 +22,34 @@ parseFactor (Just lhs, Token.Mult:tokens) =
   case parsePrimary tokens of
     (Just rhs, tokens') -> parseFactor (Just (Stm.Mult lhs rhs), tokens')
     _ -> error "Parse error: expected an arithmetic expression after '*'"
-parseFactor (exp, tokens) =
+
+parseFactor (Nothing, tokens) =
   case parsePrimary tokens of
-    (Nothing, tokens') -> (exp, tokens')
-    (exp', tokens') -> parseFactor (exp', tokens')
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseFactor (exp, tokens')
+parseFactor (exp, tokens) = (exp, tokens)
+
+-- Parse terms.
+parseTerm :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+
+-- addition
+parseTerm (Just lhs, Token.Add:tokens) =
+    case parseFactor (Nothing, tokens) of
+      (Just rhs, tokens') -> parseTerm (Just (Stm.Add lhs rhs), tokens')
+      _ -> error "Parse error: expected an arithmetic expression after '+'"
+
+-- subtraction
+parseTerm (Just lhs, Token.Sub:tokens) =
+    case parseFactor (Nothing, tokens) of
+      (Just rhs, tokens') -> parseTerm (Just (Stm.Sub lhs rhs), tokens')
+      _ -> error "Parse error: expected an arithmetic expression after '-'"
+
+parseTerm (Nothing, tokens) =
+  case parseFactor (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseTerm (exp, tokens')
+
+parseTerm (exp, tokens) = (exp, tokens)
 
 -- Parse a list of tokens.
 parseTokens :: [Token] -> Program
@@ -33,7 +57,7 @@ parseTokens [] = []
 
 -- assignment
 parseTokens ((Token.Var var):(Token.Assign):tokens) =
-  case parseFactor (Nothing, tokens) of
+  case parseTerm (Nothing, tokens) of
     (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
