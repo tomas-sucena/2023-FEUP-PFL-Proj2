@@ -28,5 +28,5 @@ compB (Stm.Le lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le]
 comp :: Program -> Code
 comp [] = []
 comp ( (Stm.Assign var exp):xs ) = (compA exp) ++ [Inst.Store var] ++ (comp xs)
-comp ( (Stm.If cond code):xs ) = [Inst.Branch (compB cond) (comp [code]) ] ++ (comp xs)
+comp ( (Stm.If cond code):xs ) = (compB cond) ++ [Inst.Branch (comp [code]) [Inst.Noop] ] ++ (comp xs)
 comp ( (Stm.While cond code):xs ) = [Inst.Loop (compB cond) (comp [code]) ] ++ (comp xs)
