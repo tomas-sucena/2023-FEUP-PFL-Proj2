@@ -15,9 +15,9 @@ data Token =
   -- operators
   | Assign -- ':='
   | Not -- 'not'
-  | Plus -- '+'
-  | Minus -- '-'
-  | Times -- '*'
+  | Add -- '+'
+  | Mult -- '*'
+  | Sub -- '-'
   | IEqu -- '='
   | BEqu -- '=='
   | Le -- '<='
