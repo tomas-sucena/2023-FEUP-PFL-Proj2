@@ -1,18 +1,21 @@
 module Parser where
 
-import qualified Utils.Stm as Stm ( Aexp(..), Bexp(..), Stm(..), Program )
+import Utils.Stm ( Aexp, Bexp, Stm, Program )
+import qualified Utils.Stm as Stm ( Aexp(..), Bexp(..), Stm(..) )
 
 import Utils.Token ( Token )
 import qualified Utils.Token as Token ( Token(..) )
 
 import Lexer (lexer)
 
-parseAexp :: [Tokens] -> (Aexp, [Tokens])
+parseAexp :: [Token] -> (Aexp, [Token])
 parseAexp ((Token.I i):tokens) = (Stm.I i, tokens)
 
-parseAssignment :: (String, [Tokens]) -> (Stm, [Tokens])
+{-
+parseAssignment :: (String, [Token]) -> (Stm, [Token])
 -- parseAssignment (var, (Assign):tokens)
 parseAssignment (var, _) = error "Parse error: expected an assignment after " ++ var
+-}
 
 parseTokens :: [Token] -> Program
 parseTokens [] = []
