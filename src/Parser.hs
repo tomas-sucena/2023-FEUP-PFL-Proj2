@@ -12,6 +12,10 @@ import Lexer (lexer)
 parsePrimary :: [Token] -> (Maybe Aexp, [Token])
 parsePrimary ( (Token.I i):tokens ) = (Just (Stm.I i), tokens)
 parsePrimary ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
+parsePrimary ( Token.LParen:tokens ) =
+  case parseAexp tokens of
+    (exp, Token.RParen:tokens') -> (exp, tokens')
+    _ -> error "Parse error: expected a closing ')'."
 parsePrimary tokens = (Nothing, tokens)
 
 -- Parse unary expressions.
@@ -60,13 +64,17 @@ parseTerm (Nothing, tokens) =
 
 parseTerm (exp, tokens) = (exp, tokens)
 
+-- Parse an arithmetic expression.
+parseAexp :: [Token] -> (Maybe Aexp, [Token])
+parseAexp tokens = parseTerm (Nothing, tokens)
+
 -- Parse a list of tokens.
 parseTokens :: [Token] -> Program
 parseTokens [] = []
 
 -- assignment
 parseTokens ((Token.Var var):(Token.Assign):tokens) =
-  case parseTerm (Nothing, tokens) of
+  case parseAexp tokens of
     (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
