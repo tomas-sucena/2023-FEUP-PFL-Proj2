@@ -4,8 +4,8 @@ data Token =
   Var String -- variables
 
   -- values
-  | Int Integer
-  | Bool Bool
+  | I Integer -- integers
+  | B Bool -- booleans
 
   -- symbols
   | Semicolon -- ';'

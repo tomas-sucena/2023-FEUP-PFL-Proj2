@@ -1,22 +1,3 @@
--- PFL 2023/24 - Haskell practical assignment quickstart
--- Updated on 15/12/2023
-
--- Part 2
-
--- TODO: Define the types Aexp, Bexp, Stm and Program
-
--- compA :: Aexp -> Code
-compA = undefined -- TODO
-
--- compB :: Bexp -> Code
-compB = undefined -- TODO
-
--- compile :: Program -> Code
-compile = undefined -- TODO
-
--- parse :: String -> Program
-parse = undefined -- TODO
-
 -- To help you test your parser
 testParser :: String -> (String, String)
 testParser programCode = (stack2Str stack, state2Str state)

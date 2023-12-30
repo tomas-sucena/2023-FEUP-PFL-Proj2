@@ -5,7 +5,7 @@ import Utils.Token as Token ( Token(..) )
 
 -- Lexes the first word that appears in the string.
 lexNumber :: String -> (Token, String)
-lexNumber s = (Token.Int (read number :: Integer), s')
+lexNumber s = (Token.I (read number :: Integer), s')
   where
     (number, s') = break (not . isDigit) s
 
@@ -22,8 +22,8 @@ lexWord s = (token, s')
       "while" -> Token.While
       "until" -> Token.Until
       "do" -> Token.Do
-      "True" -> Token.Bool True
-      "False" -> Token.Bool False
+      "True" -> Token.B True
+      "False" -> Token.B False
       _ -> Token.Var word
 
 -- Converts the source code into a list of tokens.
