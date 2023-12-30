@@ -9,17 +9,20 @@ import qualified Utils.Token as Token ( Token(..) )
 import Lexer (lexer)
 
 -- Parse arithmetic expressions.
-parseAexp :: [Token] -> (Aexp, [Token])
+parseAexp :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 
--- addition
-parseAexp ( (Token.I i):(Token.Add):tokens ) = (Stm.Add rhs (Stm.I i), tokens')
-  where (rhs, tokens') = parseAexp tokens
-parseAexp ( (Token.Var var):(Token.Add):tokens ) = (Stm.Add rhs (Stm.Var var), tokens')
-  where (rhs, tokens') = parseAexp tokens
+-- multiplication
+parseAexp ( Just lhs, Token.Mult:tokens ) =
+  case parseAexp (Nothing, tokens) of
+    (Just rhs, tokens') -> ( Just (Stm.Mult lhs rhs), tokens')
+    _ -> error "hey"
+parseAexp ( _, Token.Mult:tokens ) = error "Parse error: expected an arithmetic expression before '*'"
 
 -- literals
-parseAexp ((Token.I i):tokens) = (Stm.I i, tokens)
-parseAexp ((Token.Var var):tokens) = (Stm.Var var, tokens)
+parseAexp (_, (Token.I i):tokens) = parseAexp (Just (Stm.I i), tokens)
+parseAexp (_, (Token.Var var):tokens) = parseAexp (Just (Stm.Var var), tokens)
+
+parseAexp (exp, tokens) = (exp, tokens)
 
 -- Parse a list of tokens.
 parseTokens :: [Token] -> Program
@@ -27,8 +30,9 @@ parseTokens [] = []
 
 -- assignment
 parseTokens ((Token.Var var):(Token.Assign):tokens) =
-  case parseAexp tokens of
-    (exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
+  case parseAexp (Nothing, tokens) of
+    (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
+    (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
 
 -- Parses code and outputs a list of statements.
