@@ -8,21 +8,24 @@ import qualified Utils.Token as Token ( Token(..) )
 
 import Lexer (lexer)
 
--- Parse arithmetic expressions.
-parseAexp :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+-- Parse primary expressions.
+parsePrimary :: [Token] -> (Maybe Aexp, [Token])
+parsePrimary ( (Token.I i):tokens ) = (Just (Stm.I i), tokens)
+parsePrimary ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
+parsePrimary tokens = (Nothing, tokens)
+
+-- Parse factors.
+parseFactor :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 
 -- multiplication
-parseAexp ( Just lhs, Token.Mult:tokens ) =
-  case parseAexp (Nothing, tokens) of
-    (Just rhs, tokens') -> ( Just (Stm.Mult lhs rhs), tokens')
-    _ -> error "hey"
-parseAexp ( _, Token.Mult:tokens ) = error "Parse error: expected an arithmetic expression before '*'"
-
--- literals
-parseAexp (_, (Token.I i):tokens) = parseAexp (Just (Stm.I i), tokens)
-parseAexp (_, (Token.Var var):tokens) = parseAexp (Just (Stm.Var var), tokens)
-
-parseAexp (exp, tokens) = (exp, tokens)
+parseFactor (Just lhs, Token.Mult:tokens) =
+  case parsePrimary tokens of
+    (Just rhs, tokens') -> parseFactor (Just (Stm.Mult lhs rhs), tokens')
+    _ -> error "Parse error: expected an arithmetic expression after '*'"
+parseFactor (exp, tokens) =
+  case parsePrimary tokens of
+    (Nothing, tokens') -> (exp, tokens')
+    (exp', tokens') -> parseFactor (exp', tokens')
 
 -- Parse a list of tokens.
 parseTokens :: [Token] -> Program
@@ -30,7 +33,7 @@ parseTokens [] = []
 
 -- assignment
 parseTokens ((Token.Var var):(Token.Assign):tokens) =
-  case parseAexp (Nothing, tokens) of
+  case parseFactor (Nothing, tokens) of
     (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
