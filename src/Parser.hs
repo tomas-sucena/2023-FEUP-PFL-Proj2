@@ -15,7 +15,7 @@ parsePrimaryA ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
 parsePrimaryA ( Token.LParen:tokens ) =
   case parseAexp tokens of
     (exp, Token.RParen:tokens') -> (exp, tokens')
-    _ -> error "Parse error: expected a closing ')'."
+    _ -> error "Parse error - expected a closing ')'."
 parsePrimaryA tokens = (Nothing, tokens)
 
 -- Parse unary arithmetic expressions.
@@ -23,7 +23,7 @@ parseUnaryA :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 parseUnaryA (_, Token.Sub:tokens) =
   case parsePrimaryA tokens of
     (Just exp, tokens') -> parseUnaryA (Just (Stm.Sub (Stm.I 0) exp), tokens')
-    _ -> error "Parse error: expected an arithmetic expression after '-'"
+    _ -> error "Parse error - expected an arithmetic expression after '-'"
 parseUnaryA (Nothing, tokens) = parsePrimaryA tokens
 parseUnaryA (exp, tokens) = (exp, tokens)
 
@@ -34,7 +34,7 @@ parseFactor :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 parseFactor (Just lhs, Token.Mult:tokens) =
   case parseUnaryA (Nothing, tokens) of
     (Just rhs, tokens') -> parseFactor (Just (Stm.Mult lhs rhs), tokens')
-    _ -> error "Parse error: expected an arithmetic expression after '*'"
+    _ -> error "Parse error - expected an arithmetic expression after '*'"
 
 parseFactor (Nothing, tokens) =
   case parseUnaryA (Nothing, tokens) of
@@ -49,13 +49,13 @@ parseTerm :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 parseTerm (Just lhs, Token.Add:tokens) =
     case parseFactor (Nothing, tokens) of
       (Just rhs, tokens') -> parseTerm (Just (Stm.Add lhs rhs), tokens')
-      _ -> error "Parse error: expected an arithmetic expression after '+'"
+      _ -> error "Parse error - expected an arithmetic expression after '+'"
 
 -- subtraction
 parseTerm (Just lhs, Token.Sub:tokens) =
     case parseFactor (Nothing, tokens) of
       (Just rhs, tokens') -> parseTerm (Just (Stm.Sub lhs rhs), tokens')
-      _ -> error "Parse error: expected an arithmetic expression after '-'"
+      _ -> error "Parse error - expected an arithmetic expression after '-'"
 
 parseTerm (Nothing, tokens) =
   case parseFactor (Nothing, tokens) of
@@ -76,13 +76,13 @@ parseComparisonA :: (Maybe Aexp, [Token]) -> (Maybe Bexp, [Token])
 parseComparisonA (Just lhs, Token.Le:tokens) =
   case parseAexp tokens of
     (Just rhs, tokens') -> (Just (Stm.Le lhs rhs), tokens')
-    _ -> error "Parse error: expected an arithmetic expression after '<='"
+    _ -> error "Parse error - expected an arithmetic expression after '<='"
 
 -- integer equality
 parseComparisonA (Just lhs, Token.IEqu:tokens) =
   case parseAexp tokens of
     (Just rhs, tokens') -> (Just (Stm.IEqu lhs rhs), tokens')
-    _ -> error "Parse error: expected an arithmetic expression after '=='"
+    _ -> error "Parse error - expected an arithmetic expression after '=='"
 
 parseComparisonA (Nothing, tokens) =
   case parseAexp tokens of
@@ -98,7 +98,7 @@ parsePrimaryB ( (Token.B False):tokens ) = (Just (Stm.B False), tokens)
 parsePrimaryB ( Token.LParen:tokens ) =
   case parseBexp tokens of
     (exp, Token.RParen:tokens') -> (exp, tokens')
-    _ -> error "Parse error: expected a closing ')'."
+    _ -> error "Parse error - expected a closing ')'."
 parsePrimaryB tokens = parseComparisonA (Nothing, tokens)
 
 -- Parse unary boolean expressions.
@@ -106,7 +106,7 @@ parseUnaryB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
 parseUnaryB (_, Token.Not:tokens) =
   case parsePrimaryB tokens of
     (Just exp, tokens') -> parseUnaryB (Just (Stm.Not exp), tokens')
-    _ -> error "Parse error: expected a boolean expression after 'not'"
+    _ -> error "Parse error - expected a boolean expression after 'not'"
 parseUnaryB (Nothing, tokens) = parsePrimaryB tokens
 parseUnaryB (exp, tokens) = (exp, tokens)
 
@@ -117,7 +117,7 @@ parseComparisonB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
 parseComparisonB (Just lhs, Token.BEqu:tokens) =
   case parseUnaryB (Nothing, tokens) of
     (Just rhs, tokens') -> (Just (Stm.BEqu lhs rhs), tokens')
-    _ -> error "Parse error: expected a boolean expression after '='"
+    _ -> error "Parse error - expected a boolean expression after '='"
 
 parseComparisonB (Nothing, tokens) =
   case parseUnaryB (Nothing, tokens) of
@@ -132,7 +132,7 @@ parseLogical :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
 parseLogical (Just lhs, Token.And:tokens) =
   case parseComparisonB (Nothing, tokens) of
     (Just rhs, tokens') -> (Just (Stm.And lhs rhs), tokens')
-    _ -> error "Parse error: expected a boolean expression after '='"
+    _ -> error "Parse error - expected a boolean expression after '='"
 
 parseLogical (Nothing, tokens) =
   case parseComparisonB (Nothing, tokens) of
@@ -152,27 +152,27 @@ parseStm :: ([Stm], [Token]) -> ([Stm], [Token])
 parseStm ([], (Token.Var var):(Token.Assign):tokens) =
   case parseAexp tokens of
     (Just exp, Token.Semicolon:tokens') -> ( [Stm.Assign var exp], tokens')
-    (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
-    _ -> error "Parse error: expected a semicolon after an assignment"
+    (_, Token.Semicolon:tokens') -> error "Parse error - expected an arithmetic expression"
+    _ -> error "Parse error - expected a semicolon after an assignment"
 
 -- 'if' statements
 -- Parse the condition of an 'if' statement.
 parseStm ([], Token.If:tokens) =
   case parseBexp tokens of
     (Just cond, Token.Then:tokens') -> parseStm ( [ Stm.If cond [] [] ], tokens')
-    (Just exp, _) -> error "Parse error: expected a 'then' after an 'if'"
-    _ -> error "Parse error: expected a boolean expression after an 'if'"
+    (Just exp, _) -> error "Parse error - expected a 'then' after an 'if'"
+    _ -> error "Parse error - expected a boolean expression after an 'if'"
 
 -- Parse the code of an 'if' statement.
 parseStm ( [ Stm.If cond [] [] ], tokens) =
   case parseStm ([], tokens) of
-    ([], _) -> error "Parse error: expected a statement after an 'if'"
+    ([], _) -> error "Parse error - expected a statement after an 'if'"
     (c1, tokens') -> parseStm ( [ Stm.If cond c1 [] ], tokens')
 
 -- Parse the code of an 'else' statement.
 parseStm ( [ Stm.If cond c1 [] ], Token.Else:tokens) =
   case parseStm ([], tokens) of
-    ([], _) -> error "Parse error: expected a statement after an 'else'"
+    ([], _) -> error "Parse error - expected a statement after an 'else'"
     (c2, tokens') -> ( [Stm.If cond c1 c2], tokens')
 
 parseStm ( [ Stm.If cond c1 [] ], tokens) = ( [ Stm.If cond c1 [] ], tokens)
@@ -182,31 +182,31 @@ parseStm ( [ Stm.If cond c1 [] ], tokens) = ( [ Stm.If cond c1 [] ], tokens)
 parseStm ([], Token.While:tokens) =
   case parseBexp tokens of
     (Just cond, Token.Do:tokens') -> parseStm ( [ Stm.While cond [] ], tokens')
-    (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
-    _ -> error "Parse error: expected a boolean expression after a 'while'"
+    (Just exp, _) -> error "Parse error - expected a 'do' after a 'while'"
+    _ -> error "Parse error - expected a boolean expression after a 'while'"
 
 -- Parse the condition of an 'until' statement.
 parseStm ([], Token.Until:tokens) =
   case parseBexp tokens of
     (Just cond, Token.Do:tokens') -> parseStm ( [ Stm.While (Stm.Not cond) [] ], tokens')
-    (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
-    _ -> error "Parse error: expected a boolean expression after a 'while'"
+    (Just exp, _) -> error "Parse error - expected a 'do' after a 'while'"
+    _ -> error "Parse error - expected a boolean expression after a 'while'"
 
 -- Parse the code of a 'while' statement.
 parseStm ( [ Stm.While cond [] ], tokens) =
   case parseStm ([], tokens) of
-    ([], _) -> error "Parse error: expected a statement after a 'while'"
+    ([], _) -> error "Parse error - expected a statement after a 'while'"
     (c1, tokens') -> ( [Stm.While cond c1], tokens')
 
 -- Parse multiple statements.
 parseStm ([], Token.LParen:tokens) =
   case parseStm([], tokens) of
-    ([], _) -> error "Parse error: expected a statement after '('"
+    ([], _) -> error "Parse error - expected a statement after '('"
     (stm, Token.RParen:Token.Semicolon:tokens') -> (stm, tokens')
     (stm, Token.RParen:tokens') -> (stm, tokens')
     (stm, tokens') -> parseStm (stm, tokens')
 
-parseStm([], _) = error "Parse error: unexpected statement"
+parseStm([], _) = error "Parse error - unexpected statement"
 
 parseStm (stms, tokens) =
   case parseStm([], tokens) of
