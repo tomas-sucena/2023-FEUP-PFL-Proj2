@@ -3,20 +3,32 @@ module Lexer where
 import Data.Char (isAlpha, isAlphaNum, isDigit, isLower)
 import Utils.Token as Token ( Token(..) )
 
--- Lexes the first number that appears in the string.
-lexNumber :: String -> (Token, String)
-lexNumber s = (Token.I (read number :: Integer), s')
+-- Lexes a decimal number.
+lexDecNumber :: String -> (Token, String)
+lexDecNumber s = (Token.I (read number :: Integer), s')
   where
     (number, s') = break (not . isDigit) s
 
 -- Lexes a binary number
 lexBinNumber :: (Token, String) -> (Token, String)
+lexBinNumber (token, []) = (token, [])
 lexBinNumber (Token.I i, '0':s) = lexBinNumber (Token.I (i * 2), s)
 lexBinNumber (Token.I i, '1':s) = lexBinNumber (Token.I (i * 2 + 1), s)
-lexBinNumber (Token.I i, s) = (Token.I i, s)
+lexBinNumber (Token.I i, c:s)
+  | isAlphaNum c = error ("Lex error - unexpected digit " ++ show c ++ " in binary number.")
+  | otherwise = (Token.I i, c:s)
+
+-- Lexes an octal number
+lexOctalNumber :: (Token, String) -> (Token, String)
+lexOctalNumber (token, []) = (token, [])
+lexOctalNumber (Token.I i, c:s)
+  | isDigit c && c < '9' = lexOctalNumber (Token.I (i * 8 + read [c]), s)
+  | isAlphaNum c = error ("Lex error - unexpected digit " ++ show c ++ " in octal number.")
+  | otherwise = (Token.I i, c:s)
 
 -- Lexes a hexadecimal number
 lexHexNumber :: (Token, String) -> (Token, String)
+lexHexNumber (token, []) = (token, [])
 lexHexNumber (Token.I i, 'A':s) = lexHexNumber (Token.I (i * 16 + 10), s)
 lexHexNumber (Token.I i, 'a':s) = lexHexNumber (Token.I (i * 16 + 10), s)
 lexHexNumber (Token.I i, 'B':s) = lexHexNumber (Token.I (i * 16 + 11), s)
@@ -31,6 +43,7 @@ lexHexNumber (Token.I i, 'F':s) = lexHexNumber (Token.I (i * 16 + 15), s)
 lexHexNumber (Token.I i, 'f':s) = lexHexNumber (Token.I (i * 16 + 15), s)
 lexHexNumber (Token.I i, c:s)
   | isDigit c = lexHexNumber (Token.I (i * 16 + read [c]), s)
+  | isAlpha c = error ("Lex error - unexpected digit " ++ show c ++ " in hexadecimal number.")
   | otherwise = (Token.I i, c:s)
 
 -- Lexes the first word that appears in the string.
@@ -81,6 +94,11 @@ lexer ('0':'b':s) = token : lexer s'
 lexer ('0':'B':s) = token : lexer s'
   where (token, s') = lexBinNumber (Token.I 0, s)
 
+lexer ('0':'o':s) = token : lexer s'
+  where (token, s') = lexOctalNumber (Token.I 0, s)
+lexer ('0':'O':s) = token : lexer s'
+  where (token, s') = lexOctalNumber (Token.I 0, s)
+
 lexer ('0':'x':s) = token : lexer s'
   where (token, s') = lexHexNumber (Token.I 0, s)
 lexer ('0':'X':s) = token : lexer s'
@@ -88,10 +106,11 @@ lexer ('0':'X':s) = token : lexer s'
 
 lexer s@(c:_)
   | isDigit c = token : lexer s'
-  where (token, s') = lexNumber s
+  where (token, s') = lexDecNumber s
 
+-- words
 lexer s@(c:_)
   | isAlpha c = token : lexer s'
   where (token, s') = lexWord s
 
-lexer (c:_) = error ("Unexpected character: " ++ show c)
+lexer (c:_) = error ("Lex error - unexpected character " ++ show c)
