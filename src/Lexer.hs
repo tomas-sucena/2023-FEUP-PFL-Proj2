@@ -43,13 +43,13 @@ lexer (')':s) = Token.RParen:(lexer s)
 
 -- operators
 lexer (':':'=':s) = Token.Assign:(lexer s)
-lexer ('=':'=':s) = Token.BEqu:(lexer s)
+lexer ('=':'=':s) = Token.IEqu:(lexer s)
 lexer ('<':'=':s) = Token.Le:(lexer s)
 lexer ('~':s) = Token.Not:(lexer s)
 lexer ('+':s) = Token.Add:(lexer s)
 lexer ('*':s) = Token.Mult:(lexer s)
 lexer ('-':s) = Token.Sub:(lexer s)
-lexer ('=':s) = Token.IEqu:(lexer s)
+lexer ('=':s) = Token.BEqu:(lexer s)
 
 lexer s@(c:_)
   | isDigit c = token : lexer s'

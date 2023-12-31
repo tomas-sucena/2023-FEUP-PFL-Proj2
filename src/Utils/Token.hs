@@ -18,8 +18,8 @@ data Token =
   | Add -- '+'
   | Mult -- '*'
   | Sub -- '-'
-  | IEqu -- '='
-  | BEqu -- '=='
+  | IEqu -- '=='
+  | BEqu -- '='
   | Le -- '<='
 
   -- keywords

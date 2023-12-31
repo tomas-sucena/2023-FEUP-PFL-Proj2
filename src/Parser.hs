@@ -79,22 +79,54 @@ parsePrimaryB ( Token.LParen:tokens ) =
     _ -> error "Parse error: expected a closing ')'."
 parsePrimaryB tokens = (Nothing, tokens)
 
--- Parse integer equality.
-parseComparison :: (Maybe Aexp, [Token]) -> (Maybe Bexp, [Token])
-parseComparison (Just lhs, Token.Le:tokens) =
+-- Parse unary boolean expressions.
+parseUnaryB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+parseUnaryB (_, Token.Not:tokens) =
+  case parsePrimaryB tokens of
+    (Just exp, tokens') -> parseUnaryB (Just (Stm.Not exp), tokens')
+    _ -> error "Parse error: expected an arithmetic expression after '-'"
+parseUnaryB (Nothing, tokens) = parsePrimaryB tokens
+parseUnaryB (exp, tokens) = (exp, tokens)
+
+-- Parse integer comparisons.
+parseComparisonA :: (Maybe Aexp, [Token]) -> (Maybe Bexp, [Token])
+
+-- less or equal
+parseComparisonA (Just lhs, Token.Le:tokens) =
   case parseAexp tokens of
     (Just rhs, tokens') -> (Just (Stm.Le lhs rhs), tokens')
     _ -> error "Parse error: expected an arithmetic expression after '<='"
 
-parseComparison (Nothing, tokens) =
+-- integer equality
+parseComparisonA (Just lhs, Token.IEqu:tokens) =
+  case parseAexp tokens of
+    (Just rhs, tokens') -> (Just (Stm.IEqu lhs rhs), tokens')
+    _ -> error "Parse error: expected an arithmetic expression after '=='"
+
+parseComparisonA (Nothing, tokens) =
   case parseAexp tokens of
     (Nothing, tokens') -> (Nothing, tokens')
-    (exp, tokens') -> parseComparison (exp, tokens')
-parseComparison (exp, tokens) = (Nothing, tokens)
+    (exp, tokens') -> parseComparisonA (exp, tokens')
+parseComparisonA (_, tokens) = (Nothing, tokens)
 
--- Parse an arithmetic expression.
+-- Parse boolean comparisons.
+parseComparisonB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+
+-- boolean equality
+parseComparisonB (Just lhs, Token.BEqu:tokens) =
+  case parseComparisonA (Nothing, tokens) of
+    (Just rhs, tokens') -> (Just (Stm.BEqu lhs rhs), tokens')
+    _ -> error "Parse error: expected a boolean expression after '='"
+
+parseComparisonB (Nothing, tokens) =
+  case parseComparisonA (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseComparisonB (exp, tokens')
+parseComparisonB (exp, tokens) = (exp, tokens)
+
+-- Parse a boolean expression.
 parseBexp :: [Token] -> (Maybe Bexp, [Token])
-parseBexp tokens = parseComparison (Nothing, tokens)
+parseBexp tokens = parseComparisonB (Nothing, tokens)
 
 {- STATEMENTS -}
 -- Parse a list of tokens.
@@ -107,6 +139,10 @@ parseTokens ((Token.Var var):(Token.Assign):tokens) =
     (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
+
+parseB :: String -> Bexp
+parseB s = exp
+  where (Just exp, _) = parseBexp (lexer s)
 
 -- Parses code and outputs a list of statements.
 parse :: String -> Program
