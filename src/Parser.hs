@@ -146,64 +146,72 @@ parseBexp tokens = parseLogical (Nothing, tokens)
 
 {- STATEMENTS -}
 -- Parse statements.
-parseStm :: (Maybe Stm, [Token]) -> (Maybe Stm, [Token])
+parseStm :: ([Stm], [Token]) -> ([Stm], [Token])
 
 -- assignment
-parseStm (Nothing, (Token.Var var):(Token.Assign):tokens) =
+parseStm ([], (Token.Var var):(Token.Assign):tokens) =
   case parseAexp tokens of
-    (Just exp, Token.Semicolon:tokens') -> (Just (Stm.Assign var exp), tokens')
+    (Just exp, Token.Semicolon:tokens') -> ( [Stm.Assign var exp], tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
 
 -- 'if' statements
 -- Parse the condition of an 'if' statement.
-parseStm (Nothing, Token.If:tokens) =
+parseStm ([], Token.If:tokens) =
   case parseBexp tokens of
-    (Just cond, Token.Then:tokens') -> parseStm (Just (Stm.If cond [] []), tokens')
+    (Just cond, Token.Then:tokens') -> parseStm ( [ Stm.If cond [] [] ], tokens')
     (Just exp, _) -> error "Parse error: expected a 'then' after an 'if'"
     _ -> error "Parse error: expected a boolean expression after an 'if'"
 
 -- Parse the code of an 'if' statement.
-parseStm (Just (Stm.If cond [] []), tokens) =
-  case parseStm (Nothing, tokens) of
-    (Just c1, tokens') -> parseStm (Just (Stm.If cond [c1] []), tokens')
-    _ -> error "Parse error: expected a statement after an 'if'"
+parseStm ( [ Stm.If cond [] [] ], tokens) =
+  case parseStm ([], tokens) of
+    ([], _) -> error "Parse error: expected a statement after an 'if'"
+    (c1, tokens') -> parseStm ( [ Stm.If cond c1 [] ], tokens')
 
 -- Parse the code of an 'else' statement.
-parseStm (Just (Stm.If cond c1 []), Token.Else:tokens) =
-  case parseStm (Nothing, tokens) of
-    (Just c2, tokens') -> parseStm (Just (Stm.If cond c1 [c2]), tokens')
-    _ -> error "Parse error: expected a statement after an 'if'"
+parseStm ( [ Stm.If cond c1 [] ], Token.Else:tokens) =
+  case parseStm ([], tokens) of
+    ([], _) -> error "Parse error: expected a statement after an 'else'"
+    (c2, tokens') -> ( [Stm.If cond c1 c2], tokens')
+
+parseStm ( [ Stm.If cond c1 [] ], tokens) = ( [ Stm.If cond c1 [] ], tokens)
 
 -- loop statements
 -- Parse the condition of a 'while' statement.
-parseStm (Nothing, Token.While:tokens) =
+parseStm ([], Token.While:tokens) =
   case parseBexp tokens of
-    (Just cond, Token.Do:tokens') -> parseStm (Just (Stm.While cond []), tokens')
+    (Just cond, Token.Do:tokens') -> parseStm ( [ Stm.While cond [] ], tokens')
     (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
     _ -> error "Parse error: expected a boolean expression after a 'while'"
 
 -- Parse the condition of an 'until' statement.
-parseStm (Nothing, Token.Until:tokens) =
+parseStm ([], Token.Until:tokens) =
   case parseBexp tokens of
-    (Just cond, Token.Do:tokens') -> parseStm (Just (Stm.While (Stm.Not cond) []), tokens')
+    (Just cond, Token.Do:tokens') -> parseStm ( [ Stm.While (Stm.Not cond) [] ], tokens')
     (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
     _ -> error "Parse error: expected a boolean expression after a 'while'"
 
 -- Parse the code of a 'while' statement.
-parseStm (Just (Stm.While cond []), tokens) =
-  case parseStm (Nothing, tokens) of
-    (Just c1, tokens') -> parseStm (Just (Stm.While cond [c1]), tokens')
-    _ -> error "Parse error: expected a statement after a 'while'"
+parseStm ( [ Stm.While cond [] ], tokens) =
+  case parseStm ([], tokens) of
+    ([], _) -> error "Parse error: expected a statement after a 'while'"
+    (c1, tokens') -> ( [Stm.While cond c1], tokens')
 
-parseStm (stm, tokens) = (stm, tokens)
+-- Parse multiple statements.
+parseStm ([], Token.LParen:tokens) =
+  case parseStm([], tokens) of
+    ([], _) -> error "Parse error: expected a statement after '('"
+    (stm, tokens') -> parseStm (stm, tokens')
 
-parseB :: String -> Bexp
-parseB s = exp
-  where (Just exp, _) = parseBexp (lexer s)
+parseStm (stms, tokens) =
+  case parseStm([], tokens) of
+    (stm, Token.RParen:Token.Semicolon:tokens') -> (stms ++ stm, tokens')
+    (stm, Token.RParen:tokens') -> (stms ++ stm, tokens')
+    (stm, tokens') -> parseStm (stms ++ stm, tokens')
 
 -- Parses code and outputs a list of statements.
 parse :: String -> Program
 parse s =
-  case parseStm (Nothing, (lexer s)) of
-    (Just stm, _) -> [stm]
+  case parseStm ([], (lexer s)) of
+    (stms, _) -> stms
