@@ -155,22 +155,46 @@ parseStm (Nothing, (Token.Var var):(Token.Assign):tokens) =
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
 
--- if statements
+-- 'if' statements
+-- Parse the condition of an 'if' statement.
 parseStm (Nothing, Token.If:tokens) =
   case parseBexp tokens of
     (Just cond, Token.Then:tokens') -> parseStm (Just (Stm.If cond [] []), tokens')
     (Just exp, _) -> error "Parse error: expected a 'then' after an 'if'"
     _ -> error "Parse error: expected a boolean expression after an 'if'"
 
+-- Parse the code of an 'if' statement.
 parseStm (Just (Stm.If cond [] []), tokens) =
   case parseStm (Nothing, tokens) of
     (Just c1, tokens') -> parseStm (Just (Stm.If cond [c1] []), tokens')
     _ -> error "Parse error: expected a statement after an 'if'"
 
+-- Parse the code of an 'else' statement.
 parseStm (Just (Stm.If cond c1 []), Token.Else:tokens) =
   case parseStm (Nothing, tokens) of
     (Just c2, tokens') -> parseStm (Just (Stm.If cond c1 [c2]), tokens')
     _ -> error "Parse error: expected a statement after an 'if'"
+
+-- loop statements
+-- Parse the condition of a 'while' statement.
+parseStm (Nothing, Token.While:tokens) =
+  case parseBexp tokens of
+    (Just cond, Token.Do:tokens') -> parseStm (Just (Stm.While cond []), tokens')
+    (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
+    _ -> error "Parse error: expected a boolean expression after a 'while'"
+
+-- Parse the condition of an 'until' statement.
+parseStm (Nothing, Token.Until:tokens) =
+  case parseBexp tokens of
+    (Just cond, Token.Do:tokens') -> parseStm (Just (Stm.While (Stm.Not cond) []), tokens')
+    (Just exp, _) -> error "Parse error: expected a 'do' after a 'while'"
+    _ -> error "Parse error: expected a boolean expression after a 'while'"
+
+-- Parse the code of a 'while' statement.
+parseStm (Just (Stm.While cond []), tokens) =
+  case parseStm (Nothing, tokens) of
+    (Just c1, tokens') -> parseStm (Just (Stm.While cond [c1]), tokens')
+    _ -> error "Parse error: expected a statement after a 'while'"
 
 parseStm (stm, tokens) = (stm, tokens)
 
