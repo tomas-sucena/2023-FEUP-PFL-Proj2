@@ -14,13 +14,14 @@ data Token =
 
   -- operators
   | Assign -- ':='
-  | Not -- 'not'
   | Add -- '+'
   | Mult -- '*'
   | Sub -- '-'
-  | IEqu -- '=='
-  | BEqu -- '='
   | Le -- '<='
+  | IEqu -- '=='
+  | Not -- 'not'
+  | BEqu -- '='
+  | And -- 'and'
 
   -- keywords
   | If -- 'if'

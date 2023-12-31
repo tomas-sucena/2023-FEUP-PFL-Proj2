@@ -18,11 +18,11 @@ compA (Stm.Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Sub]
 compB :: Bexp -> Code
 compB (Stm.B True) = [Inst.Tru]
 compB (Stm.B False) = [Inst.Fals]
-compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
-compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
-compB (Stm.BEqu lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
-compB (Stm.IEqu lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
 compB (Stm.Le lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le]
+compB (Stm.IEqu lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
+compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
+compB (Stm.BEqu lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
+compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
 
 -- Compiles a program i.e. a list of statements.
 compile :: Program -> Code

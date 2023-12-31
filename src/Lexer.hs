@@ -16,6 +16,7 @@ lexWord s = (token, s')
     (word, s') = break (not . isAlphaNum) s
     token = case word of
       "not" -> Token.Not
+      "and" -> Token.And
       "if" -> Token.If
       "then" -> Token.Then
       "else" -> Token.Else
@@ -43,9 +44,8 @@ lexer (')':s) = Token.RParen:(lexer s)
 
 -- operators
 lexer (':':'=':s) = Token.Assign:(lexer s)
-lexer ('=':'=':s) = Token.IEqu:(lexer s)
 lexer ('<':'=':s) = Token.Le:(lexer s)
-lexer ('~':s) = Token.Not:(lexer s)
+lexer ('=':'=':s) = Token.IEqu:(lexer s)
 lexer ('+':s) = Token.Add:(lexer s)
 lexer ('*':s) = Token.Mult:(lexer s)
 lexer ('-':s) = Token.Sub:(lexer s)

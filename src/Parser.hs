@@ -69,25 +69,6 @@ parseAexp :: [Token] -> (Maybe Aexp, [Token])
 parseAexp tokens = parseTerm (Nothing, tokens)
 
 {- BOOLEAN EXPRESSIONS -}
--- Parse primary boolean expressions.
-parsePrimaryB :: [Token] -> (Maybe Bexp, [Token])
-parsePrimaryB ( (Token.B True):tokens ) = (Just (Stm.B True), tokens)
-parsePrimaryB ( (Token.B False):tokens ) = (Just (Stm.B False), tokens)
-parsePrimaryB ( Token.LParen:tokens ) =
-  case parseBexp tokens of
-    (exp, Token.RParen:tokens') -> (exp, tokens')
-    _ -> error "Parse error: expected a closing ')'."
-parsePrimaryB tokens = (Nothing, tokens)
-
--- Parse unary boolean expressions.
-parseUnaryB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
-parseUnaryB (_, Token.Not:tokens) =
-  case parsePrimaryB tokens of
-    (Just exp, tokens') -> parseUnaryB (Just (Stm.Not exp), tokens')
-    _ -> error "Parse error: expected an arithmetic expression after '-'"
-parseUnaryB (Nothing, tokens) = parsePrimaryB tokens
-parseUnaryB (exp, tokens) = (exp, tokens)
-
 -- Parse integer comparisons.
 parseComparisonA :: (Maybe Aexp, [Token]) -> (Maybe Bexp, [Token])
 
@@ -109,24 +90,59 @@ parseComparisonA (Nothing, tokens) =
     (exp, tokens') -> parseComparisonA (exp, tokens')
 parseComparisonA (_, tokens) = (Nothing, tokens)
 
+-- Parse primary boolean expressions.
+-- NOTE: For simplicity, integer comparisons are treated as primary boolean expressions, because both have the same precedence.
+parsePrimaryB :: [Token] -> (Maybe Bexp, [Token])
+parsePrimaryB ( (Token.B True):tokens ) = (Just (Stm.B True), tokens)
+parsePrimaryB ( (Token.B False):tokens ) = (Just (Stm.B False), tokens)
+parsePrimaryB ( Token.LParen:tokens ) =
+  case parseBexp tokens of
+    (exp, Token.RParen:tokens') -> (exp, tokens')
+    _ -> error "Parse error: expected a closing ')'."
+parsePrimaryB tokens = parseComparisonA (Nothing, tokens)
+
+-- Parse unary boolean expressions.
+parseUnaryB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+parseUnaryB (_, Token.Not:tokens) =
+  case parsePrimaryB tokens of
+    (Just exp, tokens') -> parseUnaryB (Just (Stm.Not exp), tokens')
+    _ -> error "Parse error: expected a boolean expression after 'not'"
+parseUnaryB (Nothing, tokens) = parsePrimaryB tokens
+parseUnaryB (exp, tokens) = (exp, tokens)
+
 -- Parse boolean comparisons.
 parseComparisonB :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
 
 -- boolean equality
 parseComparisonB (Just lhs, Token.BEqu:tokens) =
-  case parseComparisonA (Nothing, tokens) of
+  case parseUnaryB (Nothing, tokens) of
     (Just rhs, tokens') -> (Just (Stm.BEqu lhs rhs), tokens')
     _ -> error "Parse error: expected a boolean expression after '='"
 
 parseComparisonB (Nothing, tokens) =
-  case parseComparisonA (Nothing, tokens) of
+  case parseUnaryB (Nothing, tokens) of
     (Nothing, tokens') -> (Nothing, tokens')
     (exp, tokens') -> parseComparisonB (exp, tokens')
 parseComparisonB (exp, tokens) = (exp, tokens)
 
+-- Parse boolean logical expressions.
+parseLogical :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+
+-- logical AND
+parseLogical (Just lhs, Token.And:tokens) =
+  case parseComparisonB (Nothing, tokens) of
+    (Just rhs, tokens') -> (Just (Stm.And lhs rhs), tokens')
+    _ -> error "Parse error: expected a boolean expression after '='"
+
+parseLogical (Nothing, tokens) =
+  case parseComparisonB (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseLogical (exp, tokens')
+parseLogical (exp, tokens) = (exp, tokens)
+
 -- Parse a boolean expression.
 parseBexp :: [Token] -> (Maybe Bexp, [Token])
-parseBexp tokens = parseComparisonB (Nothing, tokens)
+parseBexp tokens = parseLogical (Nothing, tokens)
 
 {- STATEMENTS -}
 -- Parse a list of tokens.
