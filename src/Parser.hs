@@ -8,36 +8,36 @@ import qualified Utils.Token as Token ( Token(..) )
 
 import Lexer (lexer)
 
--- Parse primary expressions.
-parsePrimary :: [Token] -> (Maybe Aexp, [Token])
-parsePrimary ( (Token.I i):tokens ) = (Just (Stm.I i), tokens)
-parsePrimary ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
-parsePrimary ( Token.LParen:tokens ) =
+-- Parse primary arithmetic expressions.
+parsePrimaryA :: [Token] -> (Maybe Aexp, [Token])
+parsePrimaryA ( (Token.I i):tokens ) = (Just (Stm.I i), tokens)
+parsePrimaryA ( (Token.Var var):tokens ) = (Just (Stm.Var var), tokens)
+parsePrimaryA ( Token.LParen:tokens ) =
   case parseAexp tokens of
     (exp, Token.RParen:tokens') -> (exp, tokens')
     _ -> error "Parse error: expected a closing ')'."
-parsePrimary tokens = (Nothing, tokens)
+parsePrimaryA tokens = (Nothing, tokens)
 
--- Parse unary expressions.
-parseUnary :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
-parseUnary (_, Token.Sub:tokens) =
-  case parsePrimary tokens of
-    (Just exp, tokens') -> parseUnary (Just (Stm.Sub (Stm.I 0) exp), tokens')
+-- Parse unary arithmetic expressions.
+parseUnaryA :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+parseUnaryA (_, Token.Sub:tokens) =
+  case parsePrimaryA tokens of
+    (Just exp, tokens') -> parseUnaryA (Just (Stm.Sub (Stm.I 0) exp), tokens')
     _ -> error "Parse error: expected an arithmetic expression after '-'"
-parseUnary (Nothing, tokens) = parsePrimary tokens
-parseUnary (exp, tokens) = (exp, tokens)
+parseUnaryA (Nothing, tokens) = parsePrimaryA tokens
+parseUnaryA (exp, tokens) = (exp, tokens)
 
 -- Parse factors.
 parseFactor :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
 
 -- multiplication
 parseFactor (Just lhs, Token.Mult:tokens) =
-  case parseUnary (Nothing, tokens) of
+  case parseUnaryA (Nothing, tokens) of
     (Just rhs, tokens') -> parseFactor (Just (Stm.Mult lhs rhs), tokens')
     _ -> error "Parse error: expected an arithmetic expression after '*'"
 
 parseFactor (Nothing, tokens) =
-  case parseUnary (Nothing, tokens) of
+  case parseUnaryA (Nothing, tokens) of
     (Nothing, tokens') -> (Nothing, tokens')
     (exp, tokens') -> parseFactor (exp, tokens')
 parseFactor (exp, tokens) = (exp, tokens)
@@ -68,6 +68,35 @@ parseTerm (exp, tokens) = (exp, tokens)
 parseAexp :: [Token] -> (Maybe Aexp, [Token])
 parseAexp tokens = parseTerm (Nothing, tokens)
 
+{- BOOLEAN EXPRESSIONS -}
+-- Parse primary boolean expressions.
+parsePrimaryB :: [Token] -> (Maybe Bexp, [Token])
+parsePrimaryB ( (Token.B True):tokens ) = (Just (Stm.B True), tokens)
+parsePrimaryB ( (Token.B False):tokens ) = (Just (Stm.B False), tokens)
+parsePrimaryB ( Token.LParen:tokens ) =
+  case parseBexp tokens of
+    (exp, Token.RParen:tokens') -> (exp, tokens')
+    _ -> error "Parse error: expected a closing ')'."
+parsePrimaryB tokens = (Nothing, tokens)
+
+-- Parse integer equality.
+parseComparison :: (Maybe Aexp, [Token]) -> (Maybe Bexp, [Token])
+parseComparison (Just lhs, Token.Le:tokens) =
+  case parseAexp tokens of
+    (Just rhs, tokens') -> (Just (Stm.Le lhs rhs), tokens')
+    _ -> error "Parse error: expected an arithmetic expression after '<='"
+
+parseComparison (Nothing, tokens) =
+  case parseAexp tokens of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseComparison (exp, tokens')
+parseComparison (exp, tokens) = (Nothing, tokens)
+
+-- Parse an arithmetic expression.
+parseBexp :: [Token] -> (Maybe Bexp, [Token])
+parseBexp tokens = parseComparison (Nothing, tokens)
+
+{- STATEMENTS -}
 -- Parse a list of tokens.
 parseTokens :: [Token] -> Program
 parseTokens [] = []

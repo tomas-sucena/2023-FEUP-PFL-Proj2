@@ -7,6 +7,7 @@ instance Show Value where
   show (I i) = show i
   show (B b) = show b
 
+-- operator overloading
 (+) :: Value -> Value -> Value
 (+) (I lhs) (I rhs) = (I (lhs Prelude.+ rhs) )
 (+) _ _ = error "Run-time error"
