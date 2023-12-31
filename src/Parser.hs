@@ -145,16 +145,34 @@ parseBexp :: [Token] -> (Maybe Bexp, [Token])
 parseBexp tokens = parseLogical (Nothing, tokens)
 
 {- STATEMENTS -}
--- Parse a list of tokens.
-parseTokens :: [Token] -> Program
-parseTokens [] = []
+-- Parse statements.
+parseStm :: (Maybe Stm, [Token]) -> (Maybe Stm, [Token])
 
 -- assignment
-parseTokens ((Token.Var var):(Token.Assign):tokens) =
+parseStm (Nothing, (Token.Var var):(Token.Assign):tokens) =
   case parseAexp tokens of
-    (Just exp, Token.Semicolon:tokens') -> (Stm.Assign var exp):(parseTokens tokens')
+    (Just exp, Token.Semicolon:tokens') -> (Just (Stm.Assign var exp), tokens')
     (_, Token.Semicolon:tokens') -> error "Parse error: expected an arithmetic expression"
     _ -> error "Parse error: expected a semicolon after an assignment"
+
+-- if statements
+parseStm (Nothing, Token.If:tokens) =
+  case parseBexp tokens of
+    (Just cond, Token.Then:tokens') -> parseStm (Just (Stm.If cond [] []), tokens')
+    (Just exp, _) -> error "Parse error: expected a 'then' after an 'if'"
+    _ -> error "Parse error: expected a boolean expression after an 'if'"
+
+parseStm (Just (Stm.If cond [] []), tokens) =
+  case parseStm (Nothing, tokens) of
+    (Just c1, tokens') -> parseStm (Just (Stm.If cond [c1] []), tokens')
+    _ -> error "Parse error: expected a statement after an 'if'"
+
+parseStm (Just (Stm.If cond c1 []), Token.Else:tokens) =
+  case parseStm (Nothing, tokens) of
+    (Just c2, tokens') -> parseStm (Just (Stm.If cond c1 [c2]), tokens')
+    _ -> error "Parse error: expected a statement after an 'if'"
+
+parseStm (stm, tokens) = (stm, tokens)
 
 parseB :: String -> Bexp
 parseB s = exp
@@ -162,4 +180,6 @@ parseB s = exp
 
 -- Parses code and outputs a list of statements.
 parse :: String -> Program
-parse s = parseTokens (lexer s)
+parse s =
+  case parseStm (Nothing, (lexer s)) of
+    (Just stm, _) -> [stm]

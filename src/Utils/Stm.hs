@@ -22,8 +22,8 @@ data Bexp =
 -- statements
 data Stm =
   Assign String Aexp -- integer assignment
-  | If Bexp Stm -- if
-  | While Bexp Stm -- while
+  | If Bexp [Stm] [Stm] -- if
+  | While Bexp [Stm] -- while
   deriving Show
 
 type Program = [Stm]

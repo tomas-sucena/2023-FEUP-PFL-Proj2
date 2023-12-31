@@ -28,5 +28,6 @@ compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
 compile :: Program -> Code
 compile [] = []
 compile ( (Stm.Assign var exp):xs ) = (compA exp) ++ [Inst.Store var] ++ (compile xs)
-compile ( (Stm.If cond code):xs ) = (compB cond) ++ [Inst.Branch (compile [code]) [Inst.Noop] ] ++ (compile xs)
-compile ( (Stm.While cond code):xs ) = [Inst.Loop (compB cond) (compile [code]) ] ++ (compile xs)
+compile ( (Stm.If cond c1 []):xs ) = (compB cond) ++ [Inst.Branch (compile c1) [Inst.Noop] ] ++ (compile xs)
+compile ( (Stm.If cond c1 c2):xs ) = (compB cond) ++ [Inst.Branch (compile c1) (compile c2) ] ++ (compile xs)
+compile ( (Stm.While c1 c2):xs ) = [Inst.Loop (compB c1) (compile c2) ] ++ (compile xs)
