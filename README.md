@@ -18,6 +18,7 @@ Welcome to the official documentation of **Pretty Fun Language** (or PFL for sho
     * [Lexical analysis](#lexical-analysis)
     * [Parsing](#parsing)
     * [Compilation](#compilation)
+    * [Execution](#execution)
 <!-- TOC -->
 
 ## Development
@@ -145,6 +146,14 @@ The source code of the lexer can be found [here](src/Lexer.hs).
 
 ### Parsing
 
+After lexing the source code, the next step is to **parse** the list of tokens. In computer science, parsing refers to building one or more tree structures, usually known as **abstract syntax trees** (or ASTs for short), that reflect the grammar of a language.
+ 
+The simplest building blocks in PFL are **expressions**, which are units of code that represent values within the programming language. They come in two flavors: **arithmetic**, which evaluate to an integer, and **boolean**, which evaluate to a boolean. We defined their ASTs like so:
+
+```haskell
+
+```
+
 ### Compilation
 
 Upon obtaining the ASTs, the next step is converting them into proper instructions, which will then be executed in the final phase. This phase is where the **compilation** itself takes place.
@@ -173,7 +182,7 @@ data Inst =
   deriving Show
 ```
 
-Similarly to the ASTs, we divided the compilation into three sub-processes: compiling **arithmetic expressions**, compiling **boolean expressions** and compiling **statements**. Despite this, 
+Similarly to the ASTs, we divided the compilation into three sub-processes: compiling **arithmetic expressions**, compiling **boolean expressions** and compiling **statements**. Despite this, however, the general idea was the same for all cases:
 
 ### Execution
 

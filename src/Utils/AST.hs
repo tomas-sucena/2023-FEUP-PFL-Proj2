@@ -1,4 +1,4 @@
-module Utils.Stm where
+module Utils.AST where
 
 -- arithmetic expressions
 data Aexp =
