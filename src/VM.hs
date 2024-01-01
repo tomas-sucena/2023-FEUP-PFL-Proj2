@@ -15,12 +15,18 @@ import Utils.Stack (Stack, createEmptyStack, stack2Str)
 import qualified Utils.State as State (push, find)
 import Utils.State (State, createEmptyState, state2Str)
 
-applyUnaryOp :: (Value -> Value) -> Stack -> Stack
-applyUnaryOp op ( x:stack ) = (op x):stack
+applyUnaryOp :: (Value -> Maybe Value) -> Stack -> Stack
+applyUnaryOp op ( x:stack ) =
+  case op x of
+    Nothing -> error "Run-time error"
+    Just value -> value:stack
 applyUnaryOp _ _ = error "Run-time error"
 
-applyBinaryOp :: (Value -> Value -> Value) -> Stack -> Stack
-applyBinaryOp op ( lhs:rhs:stack ) = (op lhs rhs):stack
+applyBinaryOp :: (Value -> Value -> Maybe Value) -> Stack -> Stack
+applyBinaryOp op ( lhs:rhs:stack ) =
+  case op lhs rhs of
+    Nothing -> error "Run-time error"
+    Just value -> value:stack
 applyBinaryOp _ _ = error "Run-time error"
 
 run :: (Code, Stack, State) -> (Code, Stack, State)

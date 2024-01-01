@@ -8,31 +8,31 @@ instance Show Value where
   show (B b) = show b
 
 -- operator overloading
-(+) :: Value -> Value -> Value
-(+) (I lhs) (I rhs) = (I (lhs Prelude.+ rhs) )
-(+) _ _ = error "Run-time error"
+(+) :: Value -> Value -> Maybe Value
+(+) (I lhs) (I rhs) = Just (I (lhs Prelude.+ rhs) )
+(+) _ _ = Nothing
 
-(*) :: Value -> Value -> Value
-(*) (I lhs) (I rhs) = (I (lhs Prelude.* rhs) )
-(*) _ _ = error "Run-time error"
+(*) :: Value -> Value -> Maybe Value
+(*) (I lhs) (I rhs) = Just (I (lhs Prelude.* rhs) )
+(*) _ _ = Nothing
 
-(-) :: Value -> Value -> Value
-(-) (I lhs) (I rhs) = (I (lhs Prelude.- rhs) )
-(-) _ _ = error "Run-time error"
+(-) :: Value -> Value -> Maybe Value
+(-) (I lhs) (I rhs) = Just (I (lhs Prelude.- rhs) )
+(-) _ _ = Nothing
 
-(==) :: Value -> Value -> Value
-(==) (I lhs) (I rhs) = (B (lhs Prelude.== rhs) )
-(==) (B lhs) (B rhs) = (B (lhs Prelude.== rhs) )
-(==) _ _ = error "Run-time error"
+(==) :: Value -> Value -> Maybe Value
+(==) (I lhs) (I rhs) = Just (B (lhs Prelude.== rhs) )
+(==) (B lhs) (B rhs) = Just (B (lhs Prelude.== rhs) )
+(==) _ _ = Nothing
 
-(<=) :: Value -> Value -> Value
-(<=) (I lhs) (I rhs) = (B (lhs Prelude.<= rhs) )
-(<=) _ _ = error "Run-time error"
+(<=) :: Value -> Value -> Maybe Value
+(<=) (I lhs) (I rhs) = Just (B (lhs Prelude.<= rhs) )
+(<=) _ _ = Nothing
 
-(&&) :: Value -> Value -> Value
-(&&) (B lhs) (B rhs) = (B (lhs Prelude.&& rhs) )
-(&&) _ _ = error "Run-time error"
+(&&) :: Value -> Value -> Maybe Value
+(&&) (B lhs) (B rhs) = Just (B (lhs Prelude.&& rhs) )
+(&&) _ _ = Nothing
 
-not :: Value -> Value
-not (B x) = (B (Prelude.not x) )
-not _ = error "Run-time error"
+not :: Value -> Maybe Value
+not (B x) = Just (B (Prelude.not x) )
+not _ = Nothing
