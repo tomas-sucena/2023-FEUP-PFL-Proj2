@@ -3,6 +3,12 @@ module Lexer where
 import Data.Char (isAlpha, isAlphaNum, isDigit, isLower)
 import Utils.Token as Token ( Token(..) )
 
+-- Ignores a comment that can span multiple lines.
+ignoreMultiComment :: String -> String
+ignoreMultiComment [] = error "Lex error - expected closing '*/'."
+ignoreMultiComment ('*':'/':s) = s
+ignoreMultiComment (_:s) = ignoreMultiComment s
+
 -- Lexes a decimal number.
 lexDecNumber :: String -> (Token, String)
 lexDecNumber s = (Token.I (read number :: Integer), s')
@@ -74,6 +80,10 @@ lexer (' ':s) = lexer s
 lexer ('\n':s) = lexer s
 lexer ('\t':s) = lexer s
 lexer ('\r':s) = lexer s
+
+-- comments
+lexer ('/':'*':s) = lexer (ignoreMultiComment s)
+lexer ('/':'/':s) = lexer (dropWhile (\c -> c /= '\n') s)
 
 -- symbols
 lexer (';':s) = Token.Semicolon:(lexer s)

@@ -173,6 +173,7 @@ data Inst =
   deriving Show
 ```
 
+Similarly to the ASTs, we divided the compilation into three sub-processes: compiling **arithmetic expressions**, compiling **boolean expressions** and compiling **statements**. Despite this, 
 
 ### Execution
 
