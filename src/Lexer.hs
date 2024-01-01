@@ -54,6 +54,7 @@ lexWord s = (token, s')
     token = case word of
       "not" -> Token.Not
       "and" -> Token.And
+      "or" -> Token.Or
       "if" -> Token.If
       "then" -> Token.Then
       "else" -> Token.Else

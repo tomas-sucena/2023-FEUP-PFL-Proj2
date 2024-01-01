@@ -125,24 +125,39 @@ parseComparisonB (Nothing, tokens) =
     (exp, tokens') -> parseComparisonB (exp, tokens')
 parseComparisonB (exp, tokens) = (exp, tokens)
 
--- Parse boolean logical expressions.
-parseLogical :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+-- Parse boolean conjunction i.e. logical AND.
+parseConjuntion :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
 
 -- logical AND
-parseLogical (Just lhs, Token.And:tokens) =
+parseConjuntion (Just lhs, Token.And:tokens) =
   case parseComparisonB (Nothing, tokens) of
     (Just rhs, tokens') -> (Just (Stm.And lhs rhs), tokens')
-    _ -> error "Parse error - expected a boolean expression after '='"
+    _ -> error "Parse error - expected a boolean expression after 'and'"
 
-parseLogical (Nothing, tokens) =
+parseConjuntion (Nothing, tokens) =
   case parseComparisonB (Nothing, tokens) of
     (Nothing, tokens') -> (Nothing, tokens')
-    (exp, tokens') -> parseLogical (exp, tokens')
-parseLogical (exp, tokens) = (exp, tokens)
+    (exp, tokens') -> parseConjuntion (exp, tokens')
+parseConjuntion (exp, tokens) = (exp, tokens)
+
+-- Parse boolean disjunction i.e. logical OR.
+parseDisjunction :: (Maybe Bexp, [Token]) -> (Maybe Bexp, [Token])
+
+-- logical OR
+parseDisjunction (Just lhs, Token.Or:tokens) =
+  case parseConjuntion (Nothing, tokens) of
+    (Just rhs, tokens') -> (Just (Stm.Or lhs rhs), tokens')
+    _ -> error "Parse error - expected a boolean expression after 'or'"
+
+parseDisjunction (Nothing, tokens) =
+  case parseConjuntion (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseDisjunction (exp, tokens')
+parseDisjunction (exp, tokens) = (exp, tokens)
 
 -- Parse a boolean expression.
 parseBexp :: [Token] -> (Maybe Bexp, [Token])
-parseBexp tokens = parseLogical (Nothing, tokens)
+parseBexp tokens = parseDisjunction (Nothing, tokens)
 
 {- STATEMENTS -}
 -- Parse a statement or a group of statements delimited by parenthesis.

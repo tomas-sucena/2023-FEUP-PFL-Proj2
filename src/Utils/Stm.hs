@@ -11,12 +11,13 @@ data Aexp =
 
 -- boolean expressions
 data Bexp =
-  B Bool           -- constants
-  | Not Bexp          -- negation
-  | And Bexp Bexp     -- logical AND
-  | BEqu Bexp Bexp    -- boolean equality
-  | IEqu Aexp Aexp    -- integer equality
+  B Bool              -- constants
   | Le Aexp Aexp      -- integer less or equal
+  | IEqu Aexp Aexp    -- integer equality
+  | Not Bexp          -- negation
+  | BEqu Bexp Bexp    -- boolean equality
+  | And Bexp Bexp     -- logical AND
+  | Or Bexp Bexp      -- logical OR
   deriving Show
 
 -- statements

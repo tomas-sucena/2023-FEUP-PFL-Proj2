@@ -23,6 +23,7 @@ compB (Stm.IEqu lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
 compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
 compB (Stm.BEqu lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
 compB (Stm.And lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.And]
+compB (Stm.Or lhs rhs) = (compB rhs) ++ [Inst.Neg] ++ (compB lhs) ++ [Inst.Neg, Inst.And, Inst.Neg]
 
 -- Compiles a program i.e. a list of statements.
 compile :: Program -> Code
