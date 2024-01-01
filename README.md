@@ -151,8 +151,133 @@ After lexing the source code, the next step is to **parse** the list of tokens. 
 The simplest building blocks in PFL are **expressions**, which are units of code that represent values within the programming language. They come in two flavors: **arithmetic**, which evaluate to an integer, and **boolean**, which evaluate to a boolean. We defined their ASTs like so:
 
 ```haskell
+-- arithmetic expressions
+data Aexp =
+  I Integer           -- constant
+  | Var String        -- variables
+  | Add Aexp Aexp     -- addition
+  | Mult Aexp Aexp    -- multiplication
+  | Sub Aexp Aexp     -- subtraction
+  deriving Show
 
+-- boolean expressions
+data Bexp =
+  B Bool              -- constants
+  | Lt Aexp Aexp      -- integer less than
+  | Le Aexp Aexp      -- integer less or equal
+  | Gt Aexp Aexp      -- integer greater than
+  | Ge Aexp Aexp      -- integer greater or equal
+  | IEqu Aexp Aexp    -- integer equality
+  | Not Bexp          -- negation
+  | BEqu Bexp Bexp    -- boolean equality
+  | And Bexp Bexp     -- logical AND
+  | Or Bexp Bexp      -- logical OR
+  deriving Show
 ```
+
+In addition to expressions, there are also **statements**, which are groups of expressions and/or other statements that have a particular purpose. In PFL, there are three types of statements: **assignments**, **conditional branches** and **loops**. Their ASTs are the following:
+
+```haskell
+-- statements
+data Stm =
+  Assign String Aexp      -- integer assignment
+  | If Bexp [Stm] [Stm]   -- if
+  | While Bexp [Stm]      -- loops
+  deriving Show
+```
+
+Given the recursive nature of our ASTs, we implemented a [Recursive Descent parser](https://en.wikipedia.org/wiki/Recursive_descent_parser). We researched the topic in a book named "Crafting Interpreters", by Robert Nystrom, and took inspiration from the [6th chapter](https://craftinginterpreters.com/parsing-expressions.html), wherein Nystorm explains in great detail how to design a top-down parser.
+
+Succintly, our parser attempts to parse the expressions with the highest precedence and works its way down from there. In practice, this means that expressions are parsed in the following order:
+
+* **Arithmetic -** literals (integers and variables) > unary operators > multiplications > sums = subtractions
+* **Boolean -** literals ('True' and 'False') > integer comparisons > unary operators ('not') > logical conjunction ('and') > logical disjuntion ('or')
+
+For instance, take the arithmetic expression `1 + 2 * 3`. The steps the parser takes to analyze it are listed below:
+
+1. The parser starts by executing `parseAexp`, which is a function that parses arithmetic expressions:
+
+```haskell
+-- Parse an arithmetic expression.
+parseAexp :: [Token] -> (Maybe Aexp, [Token])
+parseAexp tokens = parseTerm (Nothing, tokens)
+```
+
+2. `parseAexp` calls `parseTerm`, which is used to parse sums and subtractions.
+
+```haskell
+-- Parse terms.
+parseTerm :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+
+-- addition
+parseTerm (Just lhs, Token.Add:tokens) =
+    case parseFactor (Nothing, tokens) of
+      (Just rhs, tokens') -> parseTerm (Just (AST.Add lhs rhs), tokens')
+      _ -> error "Parse error - expected an arithmetic expression after '+'"
+
+-- subtraction
+parseTerm (Just lhs, Token.Sub:tokens) =
+    case parseFactor (Nothing, tokens) of
+      (Just rhs, tokens') -> parseTerm (Just (AST.Sub lhs rhs), tokens')
+      _ -> error "Parse error - expected an arithmetic expression after '-'"
+
+parseTerm (Nothing, tokens) =
+  case parseFactor (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseTerm (exp, tokens')
+
+parseTerm (exp, tokens) = (exp, tokens)
+```
+
+3. `parseTerm` runs `parseFactor`, which is a function that parses multiplications.
+
+```haskell
+-- Parse factors.
+parseFactor :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+
+-- multiplication
+parseFactor (Just lhs, Token.Mult:tokens) =
+  case parseUnaryA (Nothing, tokens) of
+    (Just rhs, tokens') -> parseFactor (Just (AST.Mult lhs rhs), tokens')
+    _ -> error "Parse error - expected an arithmetic expression after '*'"
+
+parseFactor (Nothing, tokens) =
+  case parseUnaryA (Nothing, tokens) of
+    (Nothing, tokens') -> (Nothing, tokens')
+    (exp, tokens') -> parseFactor (exp, tokens')
+parseFactor (exp, tokens) = (exp, tokens)
+```
+
+4. `parseFactor` invokes `parseUnary`, which, as the name implies, is used to parse unary expressions.
+
+```haskell
+-- Parse unary arithmetic expressions.
+parseUnaryA :: (Maybe Aexp, [Token]) -> (Maybe Aexp, [Token])
+parseUnaryA (_, Token.Sub:tokens) =
+  case parsePrimaryA tokens of
+    (Just exp, tokens') -> parseUnaryA (Just (AST.Sub (AST.I 0) exp), tokens')
+    _ -> error "Parse error - expected an arithmetic expression after '-'"
+parseUnaryA (Nothing, tokens) = parsePrimaryA tokens
+parseUnaryA (exp, tokens) = (exp, tokens)
+```
+
+5. `parseUnary` calls `parsePrimary` to obtain the highest priority expression.
+
+```haskell
+-- Parse primary arithmetic expressions.
+parsePrimaryA :: [Token] -> (Maybe Aexp, [Token])
+parsePrimaryA ( (Token.I i):tokens ) = (Just (AST.I i), tokens)
+parsePrimaryA ( (Token.Var var):tokens ) = (Just (AST.Var var), tokens)
+parsePrimaryA ( Token.LParen:tokens ) =
+  case parseAexp tokens of
+    (exp, Token.RParen:tokens') -> (exp, tokens')
+    _ -> error "Parse error - expected a closing ')'."
+parsePrimaryA tokens = (Nothing, tokens)
+```
+
+6. Finally, the parser descends the parse tree by going backwards in the chain of function calls.
+
+
 
 ### Compilation
 
