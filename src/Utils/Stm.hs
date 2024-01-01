@@ -12,7 +12,10 @@ data Aexp =
 -- boolean expressions
 data Bexp =
   B Bool              -- constants
+  | Lt Aexp Aexp      -- integer less than
   | Le Aexp Aexp      -- integer less or equal
+  | Gt Aexp Aexp      -- integer greater than
+  | Ge Aexp Aexp      -- integer greater or equal
   | IEqu Aexp Aexp    -- integer equality
   | Not Bexp          -- negation
   | BEqu Bexp Bexp    -- boolean equality

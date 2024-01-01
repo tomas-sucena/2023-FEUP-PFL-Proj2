@@ -18,7 +18,13 @@ compA (Stm.Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Sub]
 compB :: Bexp -> Code
 compB (Stm.B True) = [Inst.Tru]
 compB (Stm.B False) = [Inst.Fals]
+compB (Stm.Lt lhs rhs) = rhs' ++ lhs' ++ [Inst.Le] ++ rhs' ++ lhs' ++ [Inst.Equ, Inst.Neg, Inst.And]
+  where
+    lhs' = compA lhs
+    rhs' = compA rhs
 compB (Stm.Le lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le]
+compB (Stm.Gt lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le, Inst.Neg]
+compB (Stm.Ge lhs rhs) = (compB (Stm.Lt lhs rhs)) ++ [Inst.Neg]
 compB (Stm.IEqu lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Equ]
 compB (Stm.Not exp) = (compB exp) ++ [Inst.Neg]
 compB (Stm.BEqu lhs rhs) = (compB rhs) ++ (compB lhs) ++ [Inst.Equ]
