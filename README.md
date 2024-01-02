@@ -3,7 +3,7 @@
 Welcome to the official documentation of **Pretty Fun Language** (or PFL for short), which is a small imperative programming language developed in Haskell.
 
 **Class:** 3LEIC11   
-**Group:** 4
+**Group:** T11_G04
 
 | **Student ID** |   **Student Name**   | **Participation** |
 |:--------------:|:--------------------:|:-----------------:|
