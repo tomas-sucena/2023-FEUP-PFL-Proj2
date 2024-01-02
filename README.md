@@ -30,10 +30,10 @@ Welcome to the official documentation of **Pretty Fun Language** (or PFL for sho
 
 ## Development
 
-PFL is a hybrid programming language, meaning that it is simultaneously **compiled** and **interpreted**. In fact, its code is converted into a series of intermediate instructions, known as bytecode, that are then executed by PFL's virtual machine.
+PFL is a hybrid programming language, meaning that it is simultaneously **compiled** and **interpreted**. Its code is converted into a series of intermediate instructions, known as bytecode, that are then executed by PFL's virtual machine.
 As such, running PFL is a four-phase process:
 
-1. **Lexical analysis -** The source code is divided into **tokens**, which are groups of characters that have a collective meaning. Examples of tokens include variables, keywords and literals.
+1. **Lexical analysis -** The source code is divided into **tokens**, which are groups of characters that have a collective meaning. Examples of tokens include variables, keywords, and literals.
 2. **Parsing -** The list of tokens is analyzed to form syntax trees, which are the data structures that confer meaning to the ...
 3. **Compilation -** The statements and expressions are compiled into PFL's bytecode.
 4. **Execution -** The bytecode is interpreted by the virtual machine, thus producing the actual output of the code.
@@ -583,11 +583,8 @@ In addition to the required language features that were specified in the project
 
 ```
 // this is a comment
-
-/*
-This is a multiline comment.
-It can span multiple lines.
-*/
+/* This is a multiline comment.
+It can span multiple lines. */
 
 x := /* Hello, World! */ 10;
 ```
@@ -627,10 +624,9 @@ if x > 10 and x != 13 then
 * Logical disjunction i.e. the 'or' operator.
 
 ```
+x := 0;
 if False or True then
     x := 5;
-else
-    x := 0;
 // x = 5
 ```
 
