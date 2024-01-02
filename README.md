@@ -40,7 +40,7 @@ As such, running PFL is a four-phase process:
 
 ### Lexical analysis
 
-The first phase of the compilation process is **lexing**, which consists in reading the code input by the programmer and dividing it into semantic atoms - **tokens**.
+The first phase of the compilation process is **lexing**, which consists of reading the code input by the programmer and dividing it into semantic atoms - **tokens**.
 
 Given there are several types of tokens, we created the following data structure to more easily represent them:
 
@@ -628,6 +628,16 @@ x := 0;
 if False or True then
     x := 5;
 // x = 5
+```
+
+* _until_ loops, which are loops that are executed until the condition evaluates to 'True'.
+
+```
+x := 0; y := 0;
+until x == 10
+    (x := x + 1;
+    y := y + 2;)
+// x = 10, y = 20
 ```
 
 ## Conclusions
