@@ -19,6 +19,13 @@ Welcome to the official documentation of **Pretty Fun Language** (or PFL for sho
     * [Parsing](#parsing)
     * [Compilation](#compilation)
     * [Execution](#execution)
+      * [Values](#values)
+      * [Stack](#stack)
+      * [State](#state)
+      * [Executing the Bytecode](#executing-the-bytecode)
+  * [Extra Features](#extra-features)
+  * [Conclusions](#conclusions)
+  * [Bibliography](#bibliography)
 <!-- TOC -->
 
 ## Development
@@ -279,6 +286,22 @@ parsePrimaryA tokens = (Nothing, tokens)
 
 As such, this approach eliminates any conflict that could arise from parsing expressions with different precedences.
 
+Parsing statements is similar to parsing expressions, except we do not have to be concerned with precedence. In fact, it is analogous to expressing the syntax of the statement in code. As an explanatory example, take the parsing of assignment statements:
+
+```haskell
+-- Parse a statement or a group of statements delimited by parenthesis.
+parseStm :: ([Stm], [Token]) -> ([Stm], [Token])
+
+-- assignment
+parseStm ([], (Token.Var var):(Token.Assign):tokens) =
+  case parseAexp tokens of
+    (Just exp, Token.Semicolon:tokens') -> ( [AST.Assign var exp], tokens')
+    (_, Token.Semicolon:tokens') -> error "Parse error - expected an arithmetic expression"
+    _ -> error "Parse error - expected a semicolon after an assignment"
+```
+
+In accordance with the syntax of an assignment, the parser looks for the name of a variable followed by the assignment operator. Provided it finds them, it attempts to parse the arithmetic expression that comes after the operator. If it succeeds, that means the statement was correctly formed, thus a suitable AST is generated, otherwise an error is thrown.
+
 ### Compilation
 
 Upon obtaining the ASTs, the next step is **compiling** them into proper instructions, which will then be executed in the final phase.
@@ -307,7 +330,41 @@ data Inst =
   deriving Show
 ```
 
-Similarly to the ASTs, we divided the compilation into three sub-processes: compiling **arithmetic expressions**, compiling **boolean expressions** and compiling **statements**. Despite this, however, the general idea was the same for all cases:
+Given there are arithmetic and boolean expressions, we designed `compA` and `compB` for compiling them, respectively. Despite being different functions, they follow the same principles: compile the base cases and, for the remaining expressions, recursively compile their arguments.
+
+For arithmetic expressions, the base cases are integers and variables. As such, compiling any other arithmetic expression, which represent binary operations, becomes a matter of recursively compiling its operands. This behaviour is illustrated below:
+
+```haskell
+-- Compiles an arithmetic expression
+compA :: Aexp -> Code
+compA (AST.I i) = [Inst.Push i]
+compA (AST.Var s) = [Inst.Fetch s]
+compA (AST.Add lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Add]
+compA (AST.Mult lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Mult]
+compA (AST.Sub lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Sub]
+```
+
+The same is applicable in boolean expressions, except the base cases are the boolean literals 'True' and 'False', as can be seen below:
+
+```haskell
+compB (AST.B True) = [Inst.Tru]
+compB (AST.B False) = [Inst.Fals]
+compB (AST.Le lhs rhs) = (compA rhs) ++ (compA lhs) ++ [Inst.Le]
+compB (AST.Not exp) = (compB exp) ++ [Inst.Neg]
+...
+```
+
+Using the aforementioned expression compilation functions, we created the driver function of the compilation function - `compile`. It converts a list of statements into a program by successively compiling each statement into its intermediate representation until there are no more left.
+
+```haskell
+-- Compiles a program i.e. a list of statements.
+compile :: Program -> Code
+compile [] = []
+compile ( (AST.Assign var exp):xs ) = (compA exp) ++ [Inst.Store var] ++ (compile xs)
+compile ( (AST.If cond c1 []):xs ) = (compB cond) ++ [Inst.Branch (compile c1) [Inst.Noop] ] ++ (compile xs)
+compile ( (AST.If cond c1 c2):xs ) = (compB cond) ++ [Inst.Branch (compile c1) (compile c2) ] ++ (compile xs)
+compile ( (AST.While c1 c2):xs ) = [Inst.Loop (compB c1) (compile c2) ] ++ (compile xs)
+```
 
 ### Execution
 
@@ -412,7 +469,7 @@ state2Str state
 
 #### Executing the Bytecode
 
-We created a single function for executing the bytecode instructions, appropriately named `run`. It is pretty straightforward, so, for brevity, we won't detail how each individual instruction is processed. However, they all fall into one of the following categories:
+We created a single function for executing the bytecode instructions, fittingly named `run`. It is pretty straightforward, so, for brevity, we won't detail how each individual instruction is processed. However, they all fall into one of the following categories:
 
 * **Push a literal to the stack** 
 
@@ -517,3 +574,54 @@ run ( (Loop cond code):xs, stack, state ) =
     ( [], (B False):stack', state' ) -> run ( xs, stack', state' )
     (_, _, _) -> error "Run-time error"
 ```
+
+## Extra Features
+
+In addition to the required language features that were specified in the project's description, we also developed the following new features to enrich PFL:
+
+* Single-line and multiline comments.
+
+```
+// this is a comment
+
+/*
+This is a multiline comment.
+It can span multiple lines.
+*/
+
+x := /* Hello, World! */ 10;
+```
+
+* Variable names that contain keywords as substrings.
+
+```
+whileNot := 10; // this is a valid name
+```
+
+* _if_ statements without an _else_ clause.
+
+```
+x := 0;
+if True then
+    x := 5; 
+// x = 5
+```
+
+* Binary, octal and hexadecimal numbers.
+
+```
+x := 0b1111; // 15
+y := 0o17; // 15
+z := 0xF; // 15
+```
+
+## Conclusions
+
+Overall, creating a programming language from scratch, even if it was a tiny one, was a joy. In fact, watching our program unfold from a simple virtual machine to a fully functional compiler was undeniably a rewarding experience.
+
+Moreover, Haskell proved to be an exceptional tool for this project. The functional programming paradigm let us solve some issues in the compilation pipeline, in particular within the parser, that would have been quite troublesome in imperative languages.
+
+## Bibliography
+
+* "Crafting Interpreters", by Robert Nystrom: https://craftinginterpreters.com/
+* Haskell documentation: https://www.haskell.org/documentation/
