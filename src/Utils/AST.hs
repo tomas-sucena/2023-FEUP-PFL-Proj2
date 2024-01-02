@@ -17,6 +17,7 @@ data Bexp =
   | Gt Aexp Aexp          -- integer greater than
   | Ge Aexp Aexp          -- integer greater or equal
   | IEqu Aexp Aexp        -- integer equality
+  | INequ Aexp Aexp       -- integer inequality
   | Not Bexp              -- negation
   | BEqu Bexp Bexp        -- boolean equality
   | And Bexp Bexp         -- logical AND

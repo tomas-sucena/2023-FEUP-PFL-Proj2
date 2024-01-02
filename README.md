@@ -615,6 +615,25 @@ y := 0o17; // 15
 z := 0xF; // 15
 ```
 
+* The remaining integer comparison operators - '!=', '<', '>' and '>='.
+
+```
+x := 21;
+if x > 10 and x != 13 then
+    x := 10;
+// x = 10
+```
+
+* Logical disjunction i.e. the 'or' operator.
+
+```
+if False or True then
+    x := 5;
+else
+    x := 0;
+// x = 5
+```
+
 ## Conclusions
 
 Overall, creating a programming language from scratch, even if it was a tiny one, was a joy. In fact, watching our program unfold from a simple virtual machine to a fully functional compiler was undeniably a rewarding experience.

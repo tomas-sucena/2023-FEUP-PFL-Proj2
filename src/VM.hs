@@ -103,25 +103,3 @@ run ( (Loop cond code):xs, stack, state ) =
     ( [], (B True):stack', state' ) -> run ( (code ++ [Loop cond code] ++ xs), stack', state' )
     ( [], (B False):stack', state' ) -> run ( xs, stack', state' )
     (_, _, _) -> error "Run-time error"
-
--- Auxiliary function defined by the teachers to help us test our virtual machine.
-testAssembler :: Code -> (String, String)
-testAssembler code = (stack2Str stack, state2Str state)
-  where (_,stack,state) = run(code, createEmptyStack, createEmptyState)
-
--- Examples:
--- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
--- testAssembler [Fals,Push 3,Tru,Store "var",Store "a", Store "someVar"] == ("","a=3,someVar=False,var=True")
--- testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")
--- testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
--- testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
--- testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
--- testAssembler [Push (-20),Push (-21), Le] == ("True","")
--- testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
--- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
--- If you test:
--- testAssembler [Push 1,Push 2,And]
--- You should get an exception with the string: "Run-time error"
--- If you test:
--- testAssembler [Tru,Tru,Store "y", Fetch "x",Tru]
--- You should get an exception with the string: "Run-time error"

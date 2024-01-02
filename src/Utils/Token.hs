@@ -22,6 +22,7 @@ data Token =
   | Ge          -- '>='
   | Gt          -- '>'
   | IEqu        -- '=='
+  | INequ       -- '!='
   | Not         -- 'not'
   | BEqu        -- '='
   | And         -- 'and'

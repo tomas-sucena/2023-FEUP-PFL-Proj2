@@ -78,12 +78,6 @@ parseComparisonA (Just lhs, Token.Le:tokens) =
     (Just rhs, tokens') -> (Just (AST.Le lhs rhs), tokens')
     _ -> error "Parse error - expected an arithmetic expression after '<='"
 
--- integer equality
-parseComparisonA (Just lhs, Token.IEqu:tokens) =
-  case parseAexp tokens of
-    (Just rhs, tokens') -> (Just (AST.IEqu lhs rhs), tokens')
-    _ -> error "Parse error - expected an arithmetic expression after '=='"
-
 -- less than
 parseComparisonA (Just lhs, Token.Lt:tokens) =
   case parseAexp tokens of
@@ -101,6 +95,18 @@ parseComparisonA (Just lhs, Token.Ge:tokens) =
   case parseAexp tokens of
     (Just rhs, tokens') -> (Just (AST.Ge lhs rhs), tokens')
     _ -> error "Parse error - expected an arithmetic expression after '>='"
+
+-- integer equality
+parseComparisonA (Just lhs, Token.IEqu:tokens) =
+  case parseAexp tokens of
+    (Just rhs, tokens') -> (Just (AST.IEqu lhs rhs), tokens')
+    _ -> error "Parse error - expected an arithmetic expression after '=='"
+
+-- integer inequality
+parseComparisonA (Just lhs, Token.INequ:tokens) =
+  case parseAexp tokens of
+    (Just rhs, tokens') -> (Just (AST.INequ lhs rhs), tokens')
+    _ -> error "Parse error - expected an arithmetic expression after '!='"
 
 parseComparisonA (Nothing, tokens) =
   case parseAexp tokens of
