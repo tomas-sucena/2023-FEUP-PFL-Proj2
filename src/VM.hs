@@ -8,25 +8,29 @@ import qualified Utils.Value as Value
 import Utils.Inst ( Inst(..), Code )
 
 -- the machine's stack
-import qualified Utils.Stack as Stack (push, pop)
+import qualified Utils.Stack as Stack (push)
 import Utils.Stack (Stack, createEmptyStack, stack2Str)
 
 -- the machine's state
 import qualified Utils.State as State (push, find)
 import Utils.State (State, createEmptyState, state2Str)
 
+-- Reusable function that pops a value from the stack and performs a unary operation with it.
+-- The result of the operation is then pushed to the top of the stack.
 applyUnaryOp :: (Value -> Maybe Value) -> Stack -> Stack
 applyUnaryOp op ( x:stack ) =
   case op x of
     Nothing -> error "Run-time error"
-    Just value -> value:stack
+    Just value -> Stack.push value stack
 applyUnaryOp _ _ = error "Run-time error"
 
+-- Reusable function that pops two values from the stack and performs a binary operation with them.
+-- The result of the operation is then pushed to the top of the stack.
 applyBinaryOp :: (Value -> Value -> Maybe Value) -> Stack -> Stack
 applyBinaryOp op ( lhs:rhs:stack ) =
   case op lhs rhs of
     Nothing -> error "Run-time error"
-    Just value -> value:stack
+    Just value -> Stack.push value stack
 applyBinaryOp _ _ = error "Run-time error"
 
 run :: (Code, Stack, State) -> (Code, Stack, State)
@@ -35,7 +39,7 @@ run ([], stack, state) = ([], stack, state)
 -- Dummy instruction
 run ( (Noop):xs, stack, state) = run (xs, stack, state)
 
- -- Push an integer to the stack.
+-- Push an integer to the stack.
 run ( (Push i):xs, stack, state) =
   run (xs, Stack.push (I i) stack, state)
 
@@ -94,9 +98,9 @@ run ( (Branch c1 c2):xs, (B False):stack, state ) =
 run ( (Branch _ _):_, _, _ ) = error "Run-time error"
 
 -- A loop.
-run ( (Loop c1 c2):xs, stack, state ) =
-  case run ( c1, stack, state) of
-    ( [], (B True):stack', state' ) -> run ( (c2 ++ [Loop c1 c2] ++ xs), stack', state' )
+run ( (Loop cond code):xs, stack, state ) =
+  case run ( cond, stack, state) of
+    ( [], (B True):stack', state' ) -> run ( (code ++ [Loop cond code] ++ xs), stack', state' )
     ( [], (B False):stack', state' ) -> run ( xs, stack', state' )
     (_, _, _) -> error "Run-time error"
 

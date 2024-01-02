@@ -193,9 +193,9 @@ Succintly, our parser attempts to parse the expressions with the highest precede
 * **Arithmetic -** literals (integers and variables) > unary operators > multiplications > sums = subtractions
 * **Boolean -** literals ('True' and 'False') > integer comparisons > unary operators ('not') > logical conjunction ('and') > logical disjuntion ('or')
 
-For instance, take the arithmetic expression `1 + 2 * 3`. The steps the parser takes to analyze it are listed below:
+For instance, take an arithmetic expression. The steps the parser takes to analyze it are listed below:
 
-1. The parser starts by executing `parseAexp`, which is a function that parses arithmetic expressions:
+1. The parser starts by executing `parseAexp`, which is a function that parses arithmetic expressions.
 
 ```haskell
 -- Parse an arithmetic expression.
@@ -277,11 +277,11 @@ parsePrimaryA tokens = (Nothing, tokens)
 
 6. Finally, the parser descends the parse tree by going backwards in the chain of function calls.
 
-
+As such, this approach eliminates any conflict that could arise from parsing expressions with different precedences.
 
 ### Compilation
 
-Upon obtaining the ASTs, the next step is converting them into proper instructions, which will then be executed in the final phase. This phase is where the **compilation** itself takes place.
+Upon obtaining the ASTs, the next step is **compiling** them into proper instructions, which will then be executed in the final phase.
 
 Instead of targetting specific hardware i.e. compiling to architecture dependent instructions, we opted to compile to intermediate instructions - **bytecode** - which are then interpreted by PFL's **virtual machine**. This approach ensures PFL is a portable language, albeit at the cost of performance.
 
@@ -311,3 +311,209 @@ Similarly to the ASTs, we divided the compilation into three sub-processes: comp
 
 ### Execution
 
+The final phase of the compilation process is the **execution** of the bytecode. This process is carried out by PFL's **virtual machine**, which can be identified by the tuple $(code, stack, state)$.
+
+* **Code** is a list containing the bytecode instructions to be executed.
+* **Stack** is the virtual machine's stack.
+* **State** is a map that represents the program's internal state i.e. its variables and respective values.
+
+#### Values
+
+In order for a virtual machine to function, it is necessary to specify what kind of **values** it must encompass. Since PFL only supports integers and booleans, we defined the following data structure to represent the language's values:
+
+```haskell
+data Value =
+  I Integer | B Bool
+```
+
+Additionally, we defined several operations between values, so that we could manipulate them and filter out incorrect usage. All operations follow the same basic structure: if the two values are the correct type, perform it, else return nothing. As an example, consider the sum of two values:
+
+```haskell
+-- operator overloading
+(+) :: Value -> Value -> Maybe Value
+(+) (I lhs) (I rhs) = Just (I (lhs Prelude.+ rhs) )
+(+) _ _ = Nothing
+```
+
+#### Stack
+
+PFL's virtual machine is stack-based, meaning that all primary interactions involve moving short-lived temporary values to and from a **stack**. For convenience, we defined this data structure as a list of values.
+
+```haskell
+type Stack = [Value]
+```
+
+To abstract the stack manipulation details from the virtual machine, we created the functions below:
+
+```haskell
+-- Creates a new empty stack.
+createEmptyStack :: Stack
+createEmptyStack = []
+
+-- Pushes a value onto the stack.
+push :: Value -> Stack -> Stack
+push el [] = el:[]
+push el stack = el:stack
+```
+
+To test our virtual machine, we also implemented a function which converts the stack into a string.
+
+```haskell
+import Data.List (intercalate)
+
+-- Prints the values on the stack.
+stack2Str :: Stack -> String
+stack2Str stack = intercalate "," (map show stack)
+```
+
+**Note:** As will become clear in due time, we did not require a function for popping a value off the stack.
+
+#### State
+
+The virtual machine's **state** is a binary search tree containing key-value pairs of variables and their current values. It is used to access and modify the program's variables.
+
+For simplicity, we opted to model this data structure using Haskell's standard binary search tree implementation.
+
+```haskell
+import qualified Data.Map as Map (Map, empty, insert, lookup, mapAccumWithKey)
+
+type State = Map.Map String Value
+```
+
+Thanks to this decision, creating the state manipulation functions was very simple, as we only had to call pre-established functions from the `Data.Map` library.
+
+```haskell
+-- Creates an empty machine state.
+createEmptyState :: State
+createEmptyState = Map.empty
+
+-- Inserts a variable and its value in the machine's state.
+-- If the variable is already present, its value is replaced with the new one.
+push :: String -> Value -> State -> State
+push key value state = Map.insert key value state
+
+-- Looks up the value of a variable in the machine's state.
+find :: String -> State -> Maybe Value
+find key state = Map.lookup key state
+```
+
+Similarly to the stack, we defined a function which returns a string representation of the state. To iterate through the key-value pairs, we relied on the `Map.mapAccumwithKey` function.
+
+```haskell
+-- Prints the values on the machine's state.
+state2Str :: State -> String
+state2Str state
+  | acc == "" = ""
+  | otherwise = init acc -- return everything except the last comma
+  where
+    (acc, _) = Map.mapAccumWithKey printVar "" state
+    printVar acc key value = (acc ++ key ++ "=" ++ show value ++ ",", Nothing)
+```
+
+#### Executing the Bytecode
+
+We created a single function for executing the bytecode instructions, appropriately named `run`. It is pretty straightforward, so, for brevity, we won't detail how each individual instruction is processed. However, they all fall into one of the following categories:
+
+* **Push a literal to the stack** 
+
+For instructions like `Push Integer`, `Tru` and `Fals`, we simply push the adequate value to the top of the stack.
+
+**Ex:**
+```haskell
+-- Push an integer to the stack.
+run ( (Push i):xs, stack, state) =
+  run (xs, Stack.push (I i) stack, state)
+```
+
+* **Manipulate a variable**
+
+PFL boasts two variable manipulation operations: `Fetch x`, which fetches the value of a variable and pushes it to the top of the stack, and `Store x`, which pushes the value on top of the stack and assigns it to a variable. Both functions appropriately verify if the variable exists.
+
+```haskell
+-- Fetches the current value of a variable and pushes it to the top of the stack.
+run ( (Fetch s):xs, stack, state ) =
+  case State.find s state of
+    Just value -> run ( xs, Stack.push value stack, state )
+    Nothing -> error "Run-time error"
+
+-- Fetches the current value of a variable and pushes it to the top of the stack.
+run ( (Store s):xs, value:stack, state ) =
+  run ( xs, stack, State.push s value state )
+run ( (Store s):_, [], _ ) = error "Run-time error"
+```
+
+* **Binary operations**
+
+Since there are a lot of operations that require popping two values from the top of the stack and performing a binary operation with them, we designed the following reusable function:
+
+```haskell
+-- Reusable function that pops two values from the stack and performs a binary operation with them.
+-- The result of the operation is then pushed to the top of the stack.
+applyBinaryOp :: (Value -> Value -> Maybe Value) -> Stack -> Stack
+applyBinaryOp op ( lhs:rhs:stack ) =
+  case op lhs rhs of
+    Nothing -> error "Run-time error"
+    Just value -> Stack.push value stack
+applyBinaryOp _ _ = error "Run-time error"
+```
+
+Then, we simply call it, passing the corresponding operator as an argument.
+
+**Ex:**
+```haskell
+-- Add two integers.
+run ( Add:xs, stack, state ) =
+  run ( xs, applyBinaryOp (Value.+) stack, state )
+```
+
+**Note:** To preserve the code readability, we opted to use Haskell's pattern mathing in `applyBinaryOp` to detect whether the stack had enough values for the operands. In our opinion, the alternative, which would be defining a function that popped the stack and returned nothing in case of failure, would clutter the code due to the amount of verifications it would require.
+
+* **Unary operations**
+
+Even though the 'not' operator is the only unary operator in PFL, we still created a reusable function for applying them. This would simplify extending the language with new unary operators in the future.
+
+```haskell
+-- Reusable function that pops a value from the stack and performs a unary operation with it.
+-- The result of the operation is then pushed to the top of the stack.
+applyUnaryOp :: (Value -> Maybe Value) -> Stack -> Stack
+applyUnaryOp op ( x:stack ) =
+  case op x of
+    Nothing -> error "Run-time error"
+    Just value -> Stack.push value stack
+applyUnaryOp _ _ = error "Run-time error"
+```
+
+Once again, to use it, we must pass the operator as an argument.
+
+**Ex:**
+```haskell
+-- Negates a bool.
+run ( Neg:xs, stack, state ) =
+  run (xs, applyUnaryOp (Value.not) stack, state)
+```
+
+* **Conditional branches**
+
+PFL's conditional branch instruction, `Branch c1 c2`, verifies the top of the stack in search of a boolean value, issuing an error when it does not find one. Depending on whether the value is 'True' of 'False', the first (`c1`) or second (`c2`) list of instructions are executed, respectively.
+
+```haskell
+-- A conditional branch.
+run ( (Branch c1 c2):xs, (B True):stack, state ) =
+  run ( c1 ++ xs, stack, state )
+run ( (Branch c1 c2):xs, (B False):stack, state ) =
+  run ( c2 ++ xs, stack, state )
+run ( (Branch _ _):_, _, _ ) = error "Run-time error"
+```
+
+* **Loops**
+
+The loop instruction, `Loop cond code`, functions like a standard programming loop: the condition is evaluated and, if it is 'True', the code inside the loop is executed, otherwise the virtual machine leaves the loop and executes the remaining instructions.
+
+```haskell
+-- A loop.
+run ( (Loop cond code):xs, stack, state ) =
+  case run ( cond, stack, state) of
+    ( [], (B True):stack', state' ) -> run ( (code ++ [Loop cond code] ++ xs), stack', state' )
+    ( [], (B False):stack', state' ) -> run ( xs, stack', state' )
+    (_, _, _) -> error "Run-time error"
+```
