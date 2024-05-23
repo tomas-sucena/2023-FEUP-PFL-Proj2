@@ -1,5 +1,7 @@
 # PFL - Pretty Fun Language
 
+> **Grade:** 19.62 / 20
+
 Welcome to the official documentation of **Pretty Fun Language** (or PFL for short), which is a small imperative programming language developed in Haskell.
 
 **Class:** 3LEIC11   
